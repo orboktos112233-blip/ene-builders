@@ -55,3 +55,12 @@ export function canUploadMedia(role: Role): boolean {
 export function canDeleteMedia(role: Role): boolean {
   return role === 'admin' || role === 'office' || role === 'project_manager'
 }
+
+export function canDeleteProject(role: Role): boolean {
+  return role === 'admin'
+}
+
+// Phases: admin always; PM only when also assigned to the project (enforced in action)
+export function canManagePhases(role: Role): boolean {
+  return role === 'admin' || role === 'project_manager'
+}

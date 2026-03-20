@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { formatDate, formatCurrency, formatCurrencyCompact } from '@/lib/utils'
 import { canCreateProject } from '@/lib/auth/permissions'
 import Link from 'next/link'
-import type { Project, ProjectStatus } from '@/types/database'
+import type { Project, ProjectStatus, PhaseName } from '@/types/database'
+import { PHASE_LABELS, PHASE_ORDER } from '@/types/database'
 
 export const metadata = {
   title: 'Projects – ENE Builders',
@@ -40,6 +41,36 @@ export default async function ProjectsPage() {
     if (val != null) {
       costByProject[(item as any).project_id] = (costByProject[(item as any).project_id] ?? 0) + val
     }
+  }
+
+  // Current phase per project:
+  //   1. Latest in_progress phase (highest index in PHASE_ORDER)
+  //   2. Else: latest completed phase
+  //   3. Else: null → "Not started"
+  const { data: phasesData } = await supabase
+    .from('construction_phases')
+    .select('project_id, phase, status')
+    .in('status', ['in_progress', 'completed'])
+
+  type PhaseRow = { project_id: string; phase: PhaseName; status: string }
+  const phasesByProject: Record<string, PhaseRow[]> = {}
+  for (const row of (phasesData ?? [])) {
+    const r = row as PhaseRow
+    if (!phasesByProject[r.project_id]) phasesByProject[r.project_id] = []
+    phasesByProject[r.project_id].push(r)
+  }
+
+  function currentPhase(projectId: string): { phase: PhaseName; status: string } | null {
+    const rows = phasesByProject[projectId] ?? []
+    const inProgress = rows
+      .filter((r) => r.status === 'in_progress')
+      .sort((a, b) => PHASE_ORDER.indexOf(b.phase) - PHASE_ORDER.indexOf(a.phase))
+    if (inProgress.length > 0) return inProgress[0]
+    const completed = rows
+      .filter((r) => r.status === 'completed')
+      .sort((a, b) => PHASE_ORDER.indexOf(b.phase) - PHASE_ORDER.indexOf(a.phase))
+    if (completed.length > 0) return completed[0]
+    return null
   }
 
   // Team members per project
@@ -110,6 +141,7 @@ export default async function ProjectsPage() {
                 {projects.map((project) => {
                   const cost = costByProject[project.id]
                   const team = teamByProject[project.id] ?? []
+                  const phase = currentPhase(project.id)
                   return (
                     <Link
                       key={project.id}
@@ -152,9 +184,22 @@ export default async function ProjectsPage() {
                         </p>
                       </div>
 
-                      {/* Status + Team */}
-                      <div className="flex flex-col items-end gap-2">
+                      {/* Status + Phase + Team */}
+                      <div className="flex flex-col items-end gap-1.5">
                         <StatusBadge status={project.status as ProjectStatus} />
+                        {phase ? (
+                          <span className={
+                            phase.status === 'in_progress'
+                              ? 'text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md'
+                              : 'text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md'
+                          }>
+                            {PHASE_LABELS[phase.phase]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-gray-400">
+                            Not started
+                          </span>
+                        )}
                         {team.length > 0 && (
                           <AvatarStack members={team} max={3} />
                         )}

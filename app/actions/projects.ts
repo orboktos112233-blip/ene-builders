@@ -175,3 +175,48 @@ export async function updateProjectStatusAction(
 
   return {}
 }
+
+export async function deleteProjectAction(
+  _prev: ProjectActionState,
+  formData: FormData
+): Promise<ProjectActionState> {
+  await requireRole(['admin'])
+
+  const projectId = formData.get('project_id') as string | null
+  if (!projectId || !z.string().uuid().safeParse(projectId).success) {
+    return { error: 'Invalid project ID.' }
+  }
+
+  const supabase = await createClient()
+
+  // Collect media file paths for storage cleanup before the DB row is deleted
+  const { data: mediaFiles } = await supabase
+    .from('media_files')
+    .select('file_path, file_type')
+    .eq('project_id', projectId)
+
+  // Delete project row — FK ON DELETE CASCADE handles:
+  // project_sections → project_items, project_assignments, media_files, project_import_runs
+  const { error } = await supabase.from('projects').delete().eq('id', projectId)
+
+  if (error) {
+    return { error: `Failed to delete project: ${error.message}` }
+  }
+
+  // Storage cleanup (non-fatal — DB rows are already gone)
+  if (mediaFiles && mediaFiles.length > 0) {
+    const mediaPaths = (mediaFiles as { file_path: string; file_type: string }[])
+      .filter((f) => f.file_type.startsWith('image/') || f.file_type.startsWith('video/'))
+      .map((f) => f.file_path)
+    const filePaths = (mediaFiles as { file_path: string; file_type: string }[])
+      .filter((f) => !f.file_type.startsWith('image/') && !f.file_type.startsWith('video/'))
+      .map((f) => f.file_path)
+
+    if (mediaPaths.length > 0) await supabase.storage.from('project-media').remove(mediaPaths)
+    if (filePaths.length > 0) await supabase.storage.from('project-files').remove(filePaths)
+  }
+
+  revalidatePath('/dashboard/projects')
+  revalidatePath('/dashboard')
+  redirect('/dashboard/projects')
+}

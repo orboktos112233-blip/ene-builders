@@ -21,6 +21,83 @@ export type MediaCategory =
 
 export type ImportType = 'projects' | 'budgets' | 'financials' | 'clients'
 
+export type PhaseName =
+  | 'progress'
+  | 'demo'
+  | 'foundation'
+  | 'underground_plumbing'
+  | 'framing'
+  | 'plumbing'
+  | 'electric'
+  | 'windows'
+  | 'black_paper'
+  | 'ac'
+  | 'insulation'
+  | 'dry_wall'
+  | 'tapping'
+  | 'paint'
+  | 'floor'
+  | 'hot_mop'
+  | 'tile'
+  | 'kitchen_installation'
+  | 'finish_materials_install'
+
+export type PhaseStatus = 'not_started' | 'in_progress' | 'completed'
+
+export const PHASE_ORDER: PhaseName[] = [
+  'progress',
+  'demo',
+  'foundation',
+  'underground_plumbing',
+  'framing',
+  'plumbing',
+  'electric',
+  'windows',
+  'black_paper',
+  'ac',
+  'insulation',
+  'dry_wall',
+  'tapping',
+  'paint',
+  'floor',
+  'hot_mop',
+  'tile',
+  'kitchen_installation',
+  'finish_materials_install',
+]
+
+export const PHASE_LABELS: Record<PhaseName, string> = {
+  progress:               'Progress',
+  demo:                   'Demo',
+  foundation:             'Foundation',
+  underground_plumbing:   'Under Ground Plumbing',
+  framing:                'Framing',
+  plumbing:               'Plumbing',
+  electric:               'Electric',
+  windows:                'Windows',
+  black_paper:            'Black Paper',
+  ac:                     'AC',
+  insulation:             'Insulation',
+  dry_wall:               'Dry Wall',
+  tapping:                'Tapping',
+  paint:                  'Paint',
+  floor:                  'Floor',
+  hot_mop:                'Hot Mop',
+  tile:                   'Tile',
+  kitchen_installation:   'Kitchen Installation',
+  finish_materials_install: 'Finish Materials Install',
+}
+
+export interface ConstructionPhase {
+  id: string
+  project_id: string
+  phase: PhaseName
+  status: PhaseStatus
+  notes: string | null
+  updated_by: string | null
+  updated_at: string
+}
+
 export type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 export interface Profile {
