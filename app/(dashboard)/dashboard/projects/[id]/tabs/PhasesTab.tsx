@@ -10,7 +10,7 @@ import type { ConstructionPhase, PhaseName, PhaseStatus } from '@/types/database
 // ── Helpers ───────────────────────────────────────────────────
 
 function buildRows(phases: ConstructionPhase[]) {
-  const map = new Map(phases.map((p) => [p.phase, p]))
+  const map = new Map(phases.map((p) => [p.phase_name, p]))
   return PHASE_ORDER.map((phase) => ({
     phase,
     status: (map.get(phase)?.status ?? 'not_started') as PhaseStatus,

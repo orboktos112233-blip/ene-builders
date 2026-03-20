@@ -91,7 +91,7 @@ export const PHASE_LABELS: Record<PhaseName, string> = {
 export interface ConstructionPhase {
   id: string
   project_id: string
-  phase: PhaseName
+  phase_name: PhaseName
   status: PhaseStatus
   notes: string | null
   updated_by: string | null

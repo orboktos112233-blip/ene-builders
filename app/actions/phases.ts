@@ -58,13 +58,13 @@ export async function updatePhaseAction(data: {
   const { error } = await supabase.from('construction_phases').upsert(
     {
       project_id: parsed.data.project_id,
-      phase:      parsed.data.phase,
+      phase_name: parsed.data.phase,
       status:     parsed.data.status,
       notes:      parsed.data.notes,
       updated_by: profile.id,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'project_id,phase' }
+    { onConflict: 'project_id,phase_name' }
   )
 
   if (error) {

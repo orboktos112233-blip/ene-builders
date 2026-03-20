@@ -49,10 +49,10 @@ export default async function ProjectsPage() {
   //   3. Else: null → "Not started"
   const { data: phasesData } = await supabase
     .from('construction_phases')
-    .select('project_id, phase, status')
+    .select('project_id, phase_name, status')
     .in('status', ['in_progress', 'completed'])
 
-  type PhaseRow = { project_id: string; phase: PhaseName; status: string }
+  type PhaseRow = { project_id: string; phase_name: PhaseName; status: string }
   const phasesByProject: Record<string, PhaseRow[]> = {}
   for (const row of (phasesData ?? [])) {
     const r = row as PhaseRow
@@ -64,12 +64,12 @@ export default async function ProjectsPage() {
     const rows = phasesByProject[projectId] ?? []
     const inProgress = rows
       .filter((r) => r.status === 'in_progress')
-      .sort((a, b) => PHASE_ORDER.indexOf(b.phase) - PHASE_ORDER.indexOf(a.phase))
-    if (inProgress.length > 0) return inProgress[0]
+      .sort((a, b) => PHASE_ORDER.indexOf(b.phase_name) - PHASE_ORDER.indexOf(a.phase_name))
+    if (inProgress.length > 0) return { phase: inProgress[0].phase_name, status: inProgress[0].status }
     const completed = rows
       .filter((r) => r.status === 'completed')
-      .sort((a, b) => PHASE_ORDER.indexOf(b.phase) - PHASE_ORDER.indexOf(a.phase))
-    if (completed.length > 0) return completed[0]
+      .sort((a, b) => PHASE_ORDER.indexOf(b.phase_name) - PHASE_ORDER.indexOf(a.phase_name))
+    if (completed.length > 0) return { phase: completed[0].phase_name, status: completed[0].status }
     return null
   }
 
