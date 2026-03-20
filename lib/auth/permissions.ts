@@ -64,3 +64,23 @@ export function canDeleteProject(role: Role): boolean {
 export function canManagePhases(role: Role): boolean {
   return role === 'admin' || role === 'project_manager'
 }
+
+// Photo Live tab: visible to admin, PM, and workers (assigned users)
+export function canUploadPhotoLive(role: Role): boolean {
+  return role === 'admin' || role === 'project_manager' || role === 'worker'
+}
+
+// Admin and PM can delete any live photo; workers can only delete their own (enforced in action + UI)
+export function canDeleteAnyLivePhoto(role: Role): boolean {
+  return role === 'admin' || role === 'project_manager'
+}
+
+// Only admin and assigned PM can mark photos as reviewed (PM assignment enforced in action)
+export function canReviewLivePhoto(role: Role): boolean {
+  return role === 'admin' || role === 'project_manager'
+}
+
+// Activity / audit log: visible to admin and office
+export function canViewActivity(role: Role): boolean {
+  return role === 'admin' || role === 'office'
+}

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAuth, requireRole } from '@/lib/auth/session'
 import { generateProjectCode } from '@/lib/projects/code'
 import type { ProjectStatus } from '@/types/database'
+import { logActivity } from '@/lib/activity/log'
 
 export interface ProjectActionState {
   error?: string
@@ -72,6 +73,15 @@ export async function createProjectAction(
     })
   }
 
+  await logActivity({
+    user_id:     profile.id,
+    action:      'project_created',
+    description: `Created project ${project_code}`,
+    project_id:  data.id,
+    entity_type: 'project',
+    entity_id:   data.id,
+  })
+
   revalidatePath('/dashboard/projects')
   redirect(`/dashboard/projects/${data.id}`)
 }
@@ -104,7 +114,7 @@ export async function updateProjectDetailsAction(
   _prev: ProjectActionState,
   formData: FormData
 ): Promise<ProjectActionState> {
-  await requireRole(['admin', 'project_manager', 'office'])
+  const profile = await requireRole(['admin', 'project_manager', 'office'])
 
   const raw = Object.fromEntries(formData)
 
@@ -132,6 +142,15 @@ export async function updateProjectDetailsAction(
     return { error: `Update failed: ${error.message}` }
   }
 
+  await logActivity({
+    user_id:     profile.id,
+    action:      'project_updated',
+    description: `Updated project details`,
+    project_id:  project_id,
+    entity_type: 'project',
+    entity_id:   project_id,
+  })
+
   revalidatePath(`/dashboard/projects/${project_id}`)
   revalidatePath('/dashboard/projects')
   revalidatePath('/dashboard')
@@ -148,7 +167,7 @@ export async function updateProjectStatusAction(
   _prev: ProjectActionState,
   formData: FormData
 ): Promise<ProjectActionState> {
-  await requireRole(['admin', 'project_manager'])
+  const profile = await requireRole(['admin', 'project_manager'])
 
   const parsed = updateStatusSchema.safeParse({
     project_id: formData.get('project_id'),
@@ -169,6 +188,16 @@ export async function updateProjectStatusAction(
     return { error: 'Failed to update status.' }
   }
 
+  await logActivity({
+    user_id:     profile.id,
+    action:      'status_changed',
+    description: `Changed status to ${parsed.data.status.replace('_', ' ')}`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'project',
+    entity_id:   parsed.data.project_id,
+    metadata:    { status: parsed.data.status },
+  })
+
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   revalidatePath('/dashboard/projects')
   revalidatePath('/dashboard')
@@ -176,11 +205,101 @@ export async function updateProjectStatusAction(
   return {}
 }
 
+// ── Inline start date update — PM assignment enforced server-side ───────
+
+export async function updateProjectStartDateAction(data: {
+  project_id: string
+  start_date: string | null
+}): Promise<ProjectActionState> {
+  const profile = await requireRole(['admin', 'project_manager'])
+
+  if (!z.string().uuid().safeParse(data.project_id).success) {
+    return { error: 'Invalid project.' }
+  }
+
+  const supabase = await createClient()
+
+  if (profile.role === 'project_manager') {
+    const { data: assignment } = await supabase
+      .from('project_assignments')
+      .select('id')
+      .eq('project_id', data.project_id)
+      .eq('user_id', profile.id)
+      .single()
+
+    if (!assignment) return { error: 'You are not assigned to this project.' }
+  }
+
+  const startDate = data.start_date && data.start_date !== '' ? data.start_date : null
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ start_date: startDate })
+    .eq('id', data.project_id)
+
+  if (error) return { error: 'Failed to update start date.' }
+
+  revalidatePath(`/dashboard/projects/${data.project_id}`)
+  revalidatePath('/dashboard/projects')
+  revalidatePath('/dashboard')
+
+  return { success: true }
+}
+
+// ── Inline status update — PM assignment enforced server-side ──────────
+
+export async function updateProjectStatusInlineAction(data: {
+  project_id: string
+  status: ProjectStatus
+}): Promise<ProjectActionState> {
+  const profile = await requireRole(['admin', 'project_manager'])
+
+  const parsed = updateStatusSchema.safeParse(data)
+  if (!parsed.success) return { error: 'Invalid status value.' }
+
+  const supabase = await createClient()
+
+  // PMs may only update status for projects they are assigned to
+  if (profile.role === 'project_manager') {
+    const { data: assignment } = await supabase
+      .from('project_assignments')
+      .select('id')
+      .eq('project_id', data.project_id)
+      .eq('user_id', profile.id)
+      .single()
+
+    if (!assignment) return { error: 'You are not assigned to this project.' }
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ status: parsed.data.status })
+    .eq('id', parsed.data.project_id)
+
+  if (error) return { error: 'Failed to update status.' }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'status_changed',
+    description: `Changed status to ${parsed.data.status.replace('_', ' ')}`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'project',
+    entity_id:   parsed.data.project_id,
+    metadata:    { status: parsed.data.status },
+  })
+
+  revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
+  revalidatePath('/dashboard/projects')
+  revalidatePath('/dashboard')
+
+  return { success: true }
+}
+
 export async function deleteProjectAction(
   _prev: ProjectActionState,
   formData: FormData
 ): Promise<ProjectActionState> {
-  await requireRole(['admin'])
+  const profile = await requireRole(['admin'])
 
   const projectId = formData.get('project_id') as string | null
   if (!projectId || !z.string().uuid().safeParse(projectId).success) {
@@ -215,6 +334,14 @@ export async function deleteProjectAction(
     if (mediaPaths.length > 0) await supabase.storage.from('project-media').remove(mediaPaths)
     if (filePaths.length > 0) await supabase.storage.from('project-files').remove(filePaths)
   }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'project_deleted',
+    description: `Deleted project`,
+    entity_type: 'project',
+    entity_id:   projectId,
+  })
 
   revalidatePath('/dashboard/projects')
   revalidatePath('/dashboard')

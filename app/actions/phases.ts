@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/session'
 import type { PhaseName, PhaseStatus } from '@/types/database'
+import { logActivity } from '@/lib/activity/log'
 
 export interface PhaseActionState {
   error?: string
@@ -76,6 +77,15 @@ export async function updatePhaseAction(data: {
   if (error) {
     return { error: `Failed to update phase: ${error.message}` }
   }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'phase_updated',
+    description: `Updated phase "${parsed.data.phase.replace(/_/g, ' ')}" → ${parsed.data.status.replace('_', ' ')}`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'phase',
+    metadata:    { phase: parsed.data.phase, status: parsed.data.status },
+  })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return { success: true }

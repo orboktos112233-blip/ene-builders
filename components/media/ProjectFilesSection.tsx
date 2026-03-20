@@ -74,7 +74,7 @@ function FileRow({ file, canDelete, onDelete, deleting }: FileRowProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition-colors truncate block"
+          className="text-sm font-medium text-gray-800 hover:text-violet-600 transition-colors truncate block"
         >
           {file.file_name}
         </a>
@@ -91,7 +91,7 @@ function FileRow({ file, canDelete, onDelete, deleting }: FileRowProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
           title="Open file"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ export function ProjectFilesSection({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as MediaCategory)}
-              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 text-gray-600"
+              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600"
             >
               {FILE_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
@@ -224,7 +224,7 @@ export function ProjectFilesSection({
               type="button"
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors disabled:opacity-50"
             >
               {uploading ? 'Uploading…' : '+ Upload File'}
             </button>
@@ -247,7 +247,7 @@ export function ProjectFilesSection({
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           className={`mx-6 mt-4 mb-2 border-2 border-dashed rounded-xl py-3 text-center transition-colors ${
-            dragOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-gray-50/50'
+            dragOver ? 'border-violet-400 bg-violet-50' : 'border-gray-200 bg-gray-50/50'
           }`}
         >
           <p className="text-xs text-gray-400">

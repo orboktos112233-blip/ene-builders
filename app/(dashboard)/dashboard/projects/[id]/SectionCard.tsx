@@ -98,7 +98,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
               <button
                 type="button"
                 onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 border border-indigo-100 hover:border-indigo-200 transition-colors"
+                className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
               >
                 + Add Item
               </button>
@@ -175,7 +175,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
                 <button
                   type="button"
                   onClick={() => setShowAddItem(true)}
-                  className="mt-4 text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 border border-indigo-100 hover:border-indigo-200 transition-colors"
+                  className="mt-4 text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
                 >
                   + Add First Item
                 </button>

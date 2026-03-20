@@ -16,8 +16,8 @@ const STATUS_SUGGESTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled']
 // Input styles — consistent across all edit cells
 const iCls =
   'w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white ' +
-  'placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ' +
-  'focus:border-indigo-400 transition-colors'
+  'placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 ' +
+  'focus:border-violet-400 transition-colors'
 const iClsR = iCls + ' text-right tabular-nums'
 
 function display(v: string | number | null | undefined): string {
@@ -86,7 +86,7 @@ function ItemRow({
           'border-b transition-colors duration-300',
           saved
             ? 'bg-emerald-50 border-emerald-100'
-            : 'bg-indigo-50/20 border-indigo-100/60'
+            : 'bg-violet-50/20 border-violet-100/60'
         )}
         onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
       >
@@ -270,7 +270,7 @@ function ItemRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-[11px] font-semibold text-gray-400 hover:text-indigo-600 px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors"
+              className="text-[11px] font-semibold text-gray-400 hover:text-violet-600 px-2 py-1 rounded-md hover:bg-violet-50 transition-colors"
             >
               Edit
             </button>

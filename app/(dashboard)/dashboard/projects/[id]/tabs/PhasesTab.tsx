@@ -226,7 +226,7 @@ function PhaseRow({
               <button
                 type="button"
                 onClick={() => { setNotesDraft(notes ?? ''); setEditingNotes((v) => !v) }}
-                className="ml-auto text-[11px] font-medium text-gray-400 hover:text-indigo-600 transition-colors"
+                className="ml-auto text-[11px] font-medium text-gray-400 hover:text-violet-600 transition-colors"
               >
                 {editingNotes ? 'Cancel' : notes ? 'Edit note' : '+ Add note'}
               </button>
@@ -242,7 +242,7 @@ function PhaseRow({
                   type="date"
                   value={startDraft}
                   onChange={(e) => setStartDraft(e.target.value)}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors"
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-colors"
                 />
               </div>
               <div className="flex items-center gap-1.5">
@@ -251,7 +251,7 @@ function PhaseRow({
                   type="date"
                   value={endDraft}
                   onChange={(e) => setEndDraft(e.target.value)}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors"
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-colors"
                 />
               </div>
               {draftDuration && (
@@ -262,7 +262,7 @@ function PhaseRow({
                   type="button"
                   disabled={isPending}
                   onClick={() => onSaveDates(phase, startDraft || null, endDraft || null)}
-                  className="text-xs font-semibold px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="text-xs font-semibold px-2.5 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
                   Save dates
                 </button>
@@ -296,7 +296,7 @@ function PhaseRow({
                 href={buildGoogleCalendarUrl(label, projectName, startDate, endDate, notes)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[11px] font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-medium text-violet-500 hover:text-violet-700 transition-colors"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -306,7 +306,7 @@ function PhaseRow({
               <button
                 type="button"
                 onClick={() => triggerICSDownload(label, projectName, startDate, endDate, notes)}
-                className="flex items-center gap-1 text-[11px] font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-medium text-violet-500 hover:text-violet-700 transition-colors"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -324,7 +324,7 @@ function PhaseRow({
                 onChange={(e) => setNotesDraft(e.target.value)}
                 rows={2}
                 placeholder="Add a note about this phase…"
-                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors resize-none"
+                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-colors resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -338,7 +338,7 @@ function PhaseRow({
                   type="button"
                   disabled={isPending}
                   onClick={() => { onSaveNotes(phase, notesDraft); setEditingNotes(false) }}
-                  className="text-xs font-semibold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="text-xs font-semibold px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
                   Save note
                 </button>
@@ -408,7 +408,7 @@ function ReportTable({ rows, projectName }: { rows: Row[]; projectName: string }
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 15.75v3.375c0 .621.504 1.125 1.125 1.125h8.25c.621 0 1.125-.504 1.125-1.125V15.75m.375-12H6.375c-.621 0-1.125.504-1.125 1.125v5.25c0 .621.504 1.125 1.125 1.125h11.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125ZM4.5 9.75h15" />

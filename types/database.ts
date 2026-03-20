@@ -18,6 +18,7 @@ export type MediaCategory =
   | 'budget'
   | 'plan'
   | 'other'
+  | 'live_photo'
 
 export type ImportType = 'projects' | 'budgets' | 'financials' | 'clients'
 
@@ -146,6 +147,9 @@ export interface MediaFile {
   file_size: number | null
   category: MediaCategory
   description: string | null
+  reviewed: boolean
+  reviewed_by: string | null
+  reviewed_at: string | null
   created_at: string
 }
 
@@ -228,6 +232,41 @@ export interface ProjectWithAssignments extends Project {
 
 export interface AssignmentWithProfile extends ProjectAssignment {
   profiles: Profile
+}
+
+export type ActivityAction =
+  | 'project_created'
+  | 'project_updated'
+  | 'project_deleted'
+  | 'status_changed'
+  | 'phase_updated'
+  | 'media_uploaded'
+  | 'media_deleted'
+  | 'photo_reviewed'
+  | 'member_added'
+  | 'member_removed'
+  | 'import_completed'
+
+export interface ActivityLog {
+  id: string
+  project_id: string | null
+  user_id: string | null
+  action: ActivityAction
+  entity_type: string | null
+  entity_id: string | null
+  description: string
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface ActivityLogWithProfile extends ActivityLog {
+  profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
+  projects: Pick<Project, 'id' | 'project_code' | 'name'> | null
+}
+
+export interface LivePhotoWithUploader extends MediaFile {
+  profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
+  reviewer_profile: Pick<Profile, 'id' | 'full_name'> | null
 }
 
 // Supabase Database shape (used for typed client)

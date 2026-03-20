@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { ProjectStatus, Role } from '@/types/database'
 
-type BadgeVariant = 'gray' | 'blue' | 'yellow' | 'orange' | 'green' | 'red' | 'purple'
+type BadgeVariant = 'gray' | 'blue' | 'yellow' | 'orange' | 'green' | 'red' | 'purple' | 'violet'
 
 interface BadgeProps {
   children: React.ReactNode
@@ -9,34 +9,34 @@ interface BadgeProps {
   className?: string
 }
 
-const DOT_COLORS: Record<BadgeVariant, string> = {
-  gray:   'bg-gray-400',
-  blue:   'bg-blue-500',
-  yellow: 'bg-yellow-500',
-  orange: 'bg-orange-500',
-  green:  'bg-emerald-500',
-  red:    'bg-red-500',
-  purple: 'bg-purple-500',
-}
-
 export function Badge({ children, variant = 'gray', className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold',
+        'inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-semibold tracking-wide border',
         {
-          'bg-gray-100 text-gray-600':    variant === 'gray',
-          'bg-blue-50 text-blue-700':     variant === 'blue',
-          'bg-yellow-50 text-yellow-700': variant === 'yellow',
-          'bg-orange-50 text-orange-700': variant === 'orange',
-          'bg-emerald-50 text-emerald-700': variant === 'green',
-          'bg-red-50 text-red-700':       variant === 'red',
-          'bg-purple-50 text-purple-700': variant === 'purple',
+          'bg-gray-100 text-gray-600 border-gray-200/60':       variant === 'gray',
+          'bg-sky-50 text-sky-700 border-sky-200/60':           variant === 'blue',
+          'bg-amber-50 text-amber-700 border-amber-200/60':     variant === 'yellow',
+          'bg-orange-50 text-orange-700 border-orange-200/60':  variant === 'orange',
+          'bg-emerald-50 text-emerald-700 border-emerald-200/60': variant === 'green',
+          'bg-red-50 text-red-700 border-red-200/60':           variant === 'red',
+          'bg-purple-50 text-purple-700 border-purple-200/60':  variant === 'purple',
+          'bg-violet-50 text-violet-700 border-violet-200/60':  variant === 'violet',
         },
         className
       )}
     >
-      <span className={cn('inline-block w-1.5 h-1.5 rounded-full shrink-0', DOT_COLORS[variant])} />
+      <span className={cn('inline-block w-1.5 h-1.5 rounded-full shrink-0', {
+        'bg-gray-400':    variant === 'gray',
+        'bg-sky-500':     variant === 'blue',
+        'bg-amber-500':   variant === 'yellow',
+        'bg-orange-400':  variant === 'orange',
+        'bg-emerald-500': variant === 'green',
+        'bg-red-400':     variant === 'red',
+        'bg-purple-500':  variant === 'purple',
+        'bg-violet-500':  variant === 'violet',
+      })} />
       {children}
     </span>
   )
@@ -51,11 +51,11 @@ const STATUS_VARIANTS: Record<ProjectStatus, BadgeVariant> = {
 }
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
-  planning: 'Planning',
+  planning:    'Planning',
   in_progress: 'In Progress',
-  finishing: 'Finishing',
-  inspection: 'Inspection',
-  completed: 'Completed',
+  finishing:   'Finishing',
+  inspection:  'Inspection',
+  completed:   'Completed',
 }
 
 export function StatusBadge({ status }: { status: ProjectStatus }) {
@@ -67,19 +67,19 @@ export function StatusBadge({ status }: { status: ProjectStatus }) {
 }
 
 const ROLE_VARIANTS: Record<Role, BadgeVariant> = {
-  admin: 'red',
-  office: 'blue',
+  admin:           'violet',
+  office:          'blue',
   project_manager: 'purple',
-  worker: 'yellow',
-  client: 'gray',
+  worker:          'yellow',
+  client:          'gray',
 }
 
 const ROLE_LABELS: Record<Role, string> = {
-  admin: 'Admin',
-  office: 'Office',
+  admin:           'Admin',
+  office:          'Office',
   project_manager: 'Project Manager',
-  worker: 'Worker',
-  client: 'Client',
+  worker:          'Worker',
+  client:          'Client',
 }
 
 export function RoleBadge({ role }: { role: Role }) {
@@ -90,8 +90,6 @@ export function RoleBadge({ role }: { role: Role }) {
   )
 }
 
-// Maps free-text status strings to badge color.
-// Status values are not an enum — anything can be stored.
 function resolveItemStatusVariant(status: string): BadgeVariant {
   const s = status.toLowerCase().trim()
   if (['done', 'complete', 'completed', 'finished'].includes(s)) return 'green'

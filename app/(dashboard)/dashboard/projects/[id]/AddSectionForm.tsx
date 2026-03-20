@@ -17,7 +17,7 @@ export function AddSectionForm({ projectId }: { projectId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/40 transition-all duration-150"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-violet-300 hover:text-violet-600 hover:bg-violet-50/40 transition-all duration-150"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -33,7 +33,7 @@ export function AddSectionForm({ projectId }: { projectId: string }) {
         await action(fd)
         setOpen(false)
       }}
-      className="flex items-end gap-3 p-4 bg-white border border-indigo-200 rounded-xl shadow-sm"
+      className="flex items-end gap-3 p-4 bg-white border border-violet-200 rounded-xl shadow-sm"
     >
       <input type="hidden" name="project_id" value={projectId} />
       <div className="flex-1">

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/session'
+import { logActivity } from '@/lib/activity/log'
 
 export interface AssignmentActionState {
   error?: string
@@ -19,7 +20,7 @@ export async function assignUserAction(
   _prev: AssignmentActionState,
   formData: FormData
 ): Promise<AssignmentActionState> {
-  await requireRole(['admin'])
+  const profile = await requireRole(['admin'])
 
   const parsed = assignSchema.safeParse({
     project_id: formData.get('project_id'),
@@ -41,6 +42,15 @@ export async function assignUserAction(
     return { error: 'Failed to assign user.' }
   }
 
+  await logActivity({
+    user_id:     profile.id,
+    action:      'member_added',
+    description: `Added a team member`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'assignment',
+    metadata:    { user_id: parsed.data.user_id, assignment_role: parsed.data.assignment_role },
+  })
+
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return {}
 }
@@ -54,7 +64,7 @@ export async function removeAssignmentAction(
   _prev: AssignmentActionState,
   formData: FormData
 ): Promise<AssignmentActionState> {
-  await requireRole(['admin'])
+  const profile = await requireRole(['admin'])
 
   const parsed = removeSchema.safeParse({
     assignment_id: formData.get('assignment_id'),
@@ -74,6 +84,14 @@ export async function removeAssignmentAction(
   if (error) {
     return { error: 'Failed to remove assignment.' }
   }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'member_removed',
+    description: `Removed a team member`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'assignment',
+  })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return {}

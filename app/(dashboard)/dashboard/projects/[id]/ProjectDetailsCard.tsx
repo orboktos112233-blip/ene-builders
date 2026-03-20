@@ -36,13 +36,13 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
 
   if (editing) {
     return (
-      <div className="bg-white border border-indigo-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-violet-200 rounded-2xl overflow-hidden shadow-sm">
         <form action={action}>
           <input type="hidden" name="project_id" value={project.id} />
 
           {/* Edit header */}
           <div className="px-7 pt-6 pb-5 border-b border-gray-100">
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-4">
+            <p className="text-xs font-semibold text-violet-600 uppercase tracking-widest mb-4">
               Editing Project Details
             </p>
             <FormError message={state.error} />
@@ -171,7 +171,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="shrink-0 text-xs font-semibold text-gray-400 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors border border-gray-200 hover:border-indigo-200"
+              className="shrink-0 text-xs font-semibold text-gray-400 hover:text-violet-600 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition-colors border border-gray-200 hover:border-violet-200"
             >
               Edit
             </button>
@@ -200,7 +200,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
                 <div>
                   <dt className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5">Email</dt>
                   <dd className="text-sm text-gray-900">
-                    <a href={`mailto:${project.client_email}`} className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
+                    <a href={`mailto:${project.client_email}`} className="text-violet-600 hover:text-violet-700 hover:underline transition-colors">
                       {project.client_email}
                     </a>
                   </dd>

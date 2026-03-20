@@ -28,29 +28,35 @@ export default async function UsersPage() {
   return (
     <>
       <Topbar title="Users" />
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <main className="flex-1 overflow-y-auto bg-[#F4F2EF] px-4 py-8 lg:px-10 lg:py-10">
+        <div className="max-w-4xl mx-auto space-y-8">
+
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Users</h1>
+            <p className="text-sm text-gray-400 mt-1">Manage team members and their access roles.</p>
+          </div>
 
           {/* Invite form */}
           <Card>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">Invite New User</h2>
+            <div className="px-6 py-5 border-b border-black/[0.05]">
+              <h2 className="text-sm font-semibold text-gray-800">Invite New User</h2>
             </div>
-            <div className="px-6 py-4">
+            <div className="px-6 py-5">
               <InviteUserForm />
             </div>
           </Card>
 
           {/* Users table */}
           <Card>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">
-                All Users <span className="text-gray-400 font-normal">({users?.length ?? 0})</span>
+            <div className="px-6 py-5 border-b border-black/[0.05]">
+              <h2 className="text-sm font-semibold text-gray-800">
+                All Users <span className="text-gray-400 font-normal ml-1">({users?.length ?? 0})</span>
               </h2>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-black/[0.04]">
               {users?.map((user) => (
-                <div key={user.id} className="flex items-center justify-between px-6 py-3 gap-4">
+                <div key={user.id} className="flex items-center justify-between px-6 py-4 gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={user.full_name} avatarUrl={user.avatar_url} size="sm" />
                     <div className="min-w-0">
@@ -65,7 +71,7 @@ export default async function UsersPage() {
                 </div>
               ))}
               {(!users || users.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-8">No users found.</p>
+                <p className="text-sm text-gray-400 text-center py-10">No users found.</p>
               )}
             </div>
           </Card>

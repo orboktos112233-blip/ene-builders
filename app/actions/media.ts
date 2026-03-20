@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/session'
 import type { MediaCategory } from '@/types/database'
+import { logActivity } from '@/lib/activity/log'
 
 export interface MediaActionState {
   error?: string
@@ -33,6 +34,15 @@ export async function saveMediaRecordAction(data: {
     return { error: `Failed to save file: ${error.message}` }
   }
 
+  await logActivity({
+    user_id:     profile.id,
+    action:      'media_uploaded',
+    description: `Uploaded "${data.file_name}"`,
+    project_id:  data.project_id,
+    entity_type: 'media',
+    metadata:    { category: data.category, file_name: data.file_name },
+  })
+
   revalidatePath(`/dashboard/projects/${data.project_id}`)
   return { success: true }
 }
@@ -45,7 +55,7 @@ export async function deleteMediaAction(data: {
   file_path: string
   bucket: 'project-media' | 'project-files'
 }): Promise<MediaActionState> {
-  await requireAuth()
+  const profile = await requireAuth()
   const supabase = await createClient()
 
   // Delete from storage (non-fatal — DB delete is the authoritative step)
@@ -58,6 +68,119 @@ export async function deleteMediaAction(data: {
 
   if (error) {
     return { error: `Failed to delete: ${error.message}` }
+  }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'media_deleted',
+    description: `Deleted a file`,
+    project_id:  data.project_id,
+    entity_type: 'media',
+    entity_id:   data.file_id,
+  })
+
+  revalidatePath(`/dashboard/projects/${data.project_id}`)
+  return { success: true }
+}
+
+// ── Delete a live photo — worker can only delete their own ─────────────
+
+export async function deleteLivePhotoAction(data: {
+  file_id: string
+  project_id: string
+  file_path: string
+}): Promise<MediaActionState> {
+  const profile = await requireAuth()
+  const supabase = await createClient()
+
+  // Workers may only delete photos they uploaded themselves
+  if (profile.role === 'worker') {
+    const { data: file } = await supabase
+      .from('media_files')
+      .select('uploaded_by')
+      .eq('id', data.file_id)
+      .single()
+
+    if (!file || file.uploaded_by !== profile.id) {
+      return { error: 'You can only delete your own photos.' }
+    }
+  }
+
+  await supabase.storage.from('project-media').remove([data.file_path])
+
+  const { error } = await supabase
+    .from('media_files')
+    .delete()
+    .eq('id', data.file_id)
+
+  if (error) {
+    return { error: `Failed to delete: ${error.message}` }
+  }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'media_deleted',
+    description: `Deleted a live photo`,
+    project_id:  data.project_id,
+    entity_type: 'media',
+    entity_id:   data.file_id,
+  })
+
+  revalidatePath(`/dashboard/projects/${data.project_id}`)
+  return { success: true }
+}
+
+// ── Mark / unmark a live photo as reviewed ─────────────────────────────
+
+export async function reviewLivePhotoAction(data: {
+  file_id: string
+  project_id: string
+  reviewed: boolean
+}): Promise<MediaActionState> {
+  const profile = await requireAuth()
+
+  if (profile.role === 'worker' || profile.role === 'client' || profile.role === 'office') {
+    return { error: 'Not authorized to review photos.' }
+  }
+
+  const supabase = await createClient()
+
+  // PMs can only review photos on projects they are assigned to
+  if (profile.role === 'project_manager') {
+    const { data: assignment } = await supabase
+      .from('project_assignments')
+      .select('id')
+      .eq('project_id', data.project_id)
+      .eq('user_id', profile.id)
+      .single()
+
+    if (!assignment) {
+      return { error: 'You are not assigned to this project.' }
+    }
+  }
+
+  const { error } = await supabase
+    .from('media_files')
+    .update({
+      reviewed: data.reviewed,
+      reviewed_by: data.reviewed ? profile.id : null,
+      reviewed_at: data.reviewed ? new Date().toISOString() : null,
+    })
+    .eq('id', data.file_id)
+
+  if (error) {
+    return { error: `Failed to update review status: ${error.message}` }
+  }
+
+  if (data.reviewed) {
+    await logActivity({
+      user_id:     profile.id,
+      action:      'photo_reviewed',
+      description: `Marked a live photo as reviewed`,
+      project_id:  data.project_id,
+      entity_type: 'media',
+      entity_id:   data.file_id,
+    })
   }
 
   revalidatePath(`/dashboard/projects/${data.project_id}`)

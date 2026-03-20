@@ -15,12 +15,16 @@ import {
   canDeleteMedia,
   canDeleteProject,
   canManagePhases,
+  canUploadPhotoLive,
+  canDeleteAnyLivePhoto,
+  canReviewLivePhoto,
 } from '@/lib/auth/permissions'
 import { OverviewTab } from './tabs/OverviewTab'
 import { SectionsTab } from './tabs/SectionsTab'
 import { PhasesTab } from './tabs/PhasesTab'
 import { TeamTab } from './tabs/TeamTab'
 import { ImportHistoryTab } from './tabs/ImportHistoryTab'
+import { PhotoLiveTab } from './tabs/PhotoLiveTab'
 import type {
   Project,
   Profile,
@@ -29,6 +33,7 @@ import type {
   SectionWithItems,
   MediaFile,
   ConstructionPhase,
+  LivePhotoWithUploader,
 } from '@/types/database'
 
 interface PageProps {
@@ -61,6 +66,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     { data: importRunData },
     { data: mediaFilesData },
     { data: phasesData },
+    { data: livePhotosData },
   ] = await Promise.all([
     supabase.from('projects').select('*').eq('id', id).single(),
     supabase.from('project_assignments').select('*, profiles(*)').eq('project_id', id),
@@ -85,12 +91,19 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       .from('media_files')
       .select('*')
       .eq('project_id', id)
+      .neq('category', 'live_photo')
       .order('created_at', { ascending: false }),
     supabase
       .from('construction_phases')
       .select('id, project_id, phase_name, status, notes, start_date, end_date, updated_by, updated_at')
       .eq('project_id', id)
       .order('updated_at', { ascending: false }),
+    supabase
+      .from('media_files')
+      .select('*, profiles!uploaded_by(id, full_name, avatar_url), reviewer_profile:profiles!reviewed_by(id, full_name)')
+      .eq('project_id', id)
+      .eq('category', 'live_photo')
+      .order('created_at', { ascending: false }),
   ])
 
   const project = projectData as Project | null
@@ -102,6 +115,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const importRun = importRunData as (ProjectImportRun & { profiles: Profile }) | null
   const allMediaFiles = (mediaFilesData ?? []) as MediaFile[]
   const phases = (phasesData ?? []) as ConstructionPhase[]
+  const livePhotos = (livePhotosData ?? []) as LivePhotoWithUploader[]
 
   const mediaFiles = allMediaFiles.filter((f) => f.file_type.startsWith('image/') || f.file_type.startsWith('video/'))
   const projectFiles = allMediaFiles.filter((f) => !f.file_type.startsWith('image/') && !f.file_type.startsWith('video/'))
@@ -121,18 +135,23 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     profile.role === 'admin' ||
     (profile.role === 'project_manager' && isAssigned)
 
+  const showPhotoLive = canUploadPhotoLive(profile.role) || profile.role === 'admin'
+
   const tabs = [
-    { key: 'overview',  label: 'Overview' },
-    { key: 'progress',  label: 'Progress' },
-    { key: 'sections',  label: sections.length > 0 ? `Sections & Items (${sections.length})` : 'Sections & Items' },
-    { key: 'team',      label: assignments.length > 0 ? `Team (${assignments.length})` : 'Team' },
+    { key: 'overview',   label: 'Overview' },
+    { key: 'progress',   label: 'Progress' },
+    { key: 'sections',   label: sections.length > 0 ? `Sections & Items (${sections.length})` : 'Sections & Items' },
+    { key: 'team',       label: assignments.length > 0 ? `Team (${assignments.length})` : 'Team' },
+    ...(showPhotoLive
+      ? [{ key: 'photo-live', label: livePhotos.length > 0 ? `Photo Live (${livePhotos.length})` : 'Photo Live' }]
+      : []),
     ...(canImportProjects(profile.role) ? [{ key: 'import-history', label: 'Import History' }] : []),
   ]
 
   return (
     <>
       <Topbar title={project.name} />
-      <main className="flex-1 overflow-y-auto bg-slate-50">
+      <main className="flex-1 overflow-y-auto bg-[#F4F2EF]">
         <div className="max-w-5xl mx-auto px-4 lg:px-6 py-6 space-y-5">
 
           {/* Breadcrumb */}
@@ -153,7 +172,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
                 className={cn(
                   'px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all duration-150 whitespace-nowrap',
                   tab === key
-                    ? 'border-indigo-600 text-indigo-600'
+                    ? 'border-violet-600 text-violet-600'
                     : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
                 )}
               >
@@ -201,6 +220,17 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               assignments={assignments}
               unassignedUsers={unassignedUsers}
               canManageTeam={canManageAssignments(profile.role)}
+            />
+          )}
+
+          {tab === 'photo-live' && showPhotoLive && (
+            <PhotoLiveTab
+              projectId={project.id}
+              photos={livePhotos}
+              canUpload={canUploadPhotoLive(profile.role)}
+              canDeleteAny={canDeleteAnyLivePhoto(profile.role)}
+              canReview={canReviewLivePhoto(profile.role) && (profile.role === 'admin' || isAssigned)}
+              currentUserId={profile.id}
             />
           )}
 
