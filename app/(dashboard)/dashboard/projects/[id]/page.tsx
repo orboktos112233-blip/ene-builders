@@ -178,6 +178,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
           {tab === 'progress' && (
             <PhasesTab
               projectId={project.id}
+              projectName={project.name}
               initialPhases={phases}
               canEdit={userCanEditPhases}
             />

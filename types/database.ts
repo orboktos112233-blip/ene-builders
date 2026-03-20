@@ -94,6 +94,8 @@ export interface ConstructionPhase {
   phase_name: PhaseName
   status: PhaseStatus
   notes: string | null
+  start_date: string | null
+  end_date: string | null
   updated_by: string | null
   updated_at: string
 }

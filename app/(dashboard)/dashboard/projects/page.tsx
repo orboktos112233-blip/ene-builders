@@ -130,12 +130,14 @@ export default async function ProjectsPage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {/* Table header */}
-                <div className="hidden md:grid md:grid-cols-[1fr_110px_120px_130px_140px] items-center px-6 py-2.5 bg-gray-50/80 border-b border-gray-100">
+                <div className="hidden md:grid md:grid-cols-[1fr_100px_100px_110px_100px_140px_80px] items-center px-6 py-2.5 bg-gray-50/80 border-b border-gray-100">
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Project</p>
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">Completion</p>
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">Budget</p>
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">Material Cost</p>
-                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-right">Status / Team</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center">Status</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center">Work Phase</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center">Team</p>
                 </div>
 
                 {projects.map((project) => {
@@ -146,7 +148,7 @@ export default async function ProjectsPage() {
                     <Link
                       key={project.id}
                       href={`/dashboard/projects/${project.id}`}
-                      className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_110px_120px_130px_140px] items-center px-6 py-4 hover:bg-slate-50 transition-colors duration-100 group"
+                      className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_100px_110px_100px_140px_80px] items-center px-6 py-4 hover:bg-slate-50 transition-colors duration-100 group"
                     >
                       {/* Name / meta */}
                       <div className="min-w-0 pr-4">
@@ -184,8 +186,36 @@ export default async function ProjectsPage() {
                         </p>
                       </div>
 
-                      {/* Status + Phase + Team */}
-                      <div className="flex flex-col items-end gap-1.5">
+                      {/* Status — desktop only */}
+                      <div className="hidden md:flex md:justify-center">
+                        <StatusBadge status={project.status as ProjectStatus} />
+                      </div>
+
+                      {/* Work Phase — desktop only */}
+                      <div className="hidden md:flex md:justify-center">
+                        {phase ? (
+                          <span className={
+                            phase.status === 'in_progress'
+                              ? 'text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md'
+                              : 'text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md'
+                          }>
+                            {PHASE_LABELS[phase.phase]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-gray-400">Not started</span>
+                        )}
+                      </div>
+
+                      {/* Team — desktop only */}
+                      <div className="hidden md:flex md:justify-center">
+                        {team.length > 0
+                          ? <AvatarStack members={team} max={3} />
+                          : <span className="text-xs text-gray-300">—</span>
+                        }
+                      </div>
+
+                      {/* Mobile: status + phase stacked (replaces all hidden desktop columns) */}
+                      <div className="flex flex-col items-end gap-1.5 md:hidden">
                         <StatusBadge status={project.status as ProjectStatus} />
                         {phase ? (
                           <span className={
@@ -196,12 +226,7 @@ export default async function ProjectsPage() {
                             {PHASE_LABELS[phase.phase]}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-gray-400">
-                            Not started
-                          </span>
-                        )}
-                        {team.length > 0 && (
-                          <AvatarStack members={team} max={3} />
+                          <span className="text-[10px] font-medium text-gray-400">Not started</span>
                         )}
                       </div>
                     </Link>

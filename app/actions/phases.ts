@@ -21,6 +21,8 @@ const phaseSchema = z.object({
   ]),
   status: z.enum(['not_started', 'in_progress', 'completed']),
   notes: z.string().optional().nullable().transform((v) => v || null),
+  start_date: z.string().optional().nullable().transform((v) => v || null),
+  end_date: z.string().optional().nullable().transform((v) => v || null),
 })
 
 export async function updatePhaseAction(data: {
@@ -28,6 +30,8 @@ export async function updatePhaseAction(data: {
   phase: PhaseName
   status: PhaseStatus
   notes?: string | null
+  start_date?: string | null
+  end_date?: string | null
 }): Promise<PhaseActionState> {
   const profile = await requireAuth()
 
@@ -57,12 +61,14 @@ export async function updatePhaseAction(data: {
 
   const { error } = await supabase.from('construction_phases').upsert(
     {
-      project_id: parsed.data.project_id,
-      phase_name: parsed.data.phase,
-      status:     parsed.data.status,
-      notes:      parsed.data.notes,
-      updated_by: profile.id,
-      updated_at: new Date().toISOString(),
+      project_id:  parsed.data.project_id,
+      phase_name:  parsed.data.phase,
+      status:      parsed.data.status,
+      notes:       parsed.data.notes,
+      start_date:  parsed.data.start_date,
+      end_date:    parsed.data.end_date,
+      updated_by:  profile.id,
+      updated_at:  new Date().toISOString(),
     },
     { onConflict: 'project_id,phase_name' }
   )
