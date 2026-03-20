@@ -84,3 +84,8 @@ export function canReviewLivePhoto(role: Role): boolean {
 export function canViewActivity(role: Role): boolean {
   return role === 'admin' || role === 'office'
 }
+
+// Reports: visible to admin and office
+export function canViewReports(role: Role): boolean {
+  return role === 'admin' || role === 'office'
+}

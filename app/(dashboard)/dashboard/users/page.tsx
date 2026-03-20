@@ -2,11 +2,8 @@ import { requireRole } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 import { Topbar } from '@/components/layout/Topbar'
 import { Card } from '@/components/ui/Card'
-import { RoleBadge } from '@/components/ui/Badge'
-import { Avatar } from '@/components/ui/Avatar'
-import { formatDate } from '@/lib/utils'
 import { InviteUserForm } from './InviteUserForm'
-import { ChangeRoleForm } from './ChangeRoleForm'
+import { UserSearchList } from './UserSearchList'
 import type { Profile } from '@/types/database'
 
 export const metadata = {
@@ -47,33 +44,14 @@ export default async function UsersPage() {
             </div>
           </Card>
 
-          {/* Users table */}
+          {/* Users table with search */}
           <Card>
             <div className="px-6 py-5 border-b border-black/[0.05]">
               <h2 className="text-sm font-semibold text-gray-800">
                 All Users <span className="text-gray-400 font-normal ml-1">({users?.length ?? 0})</span>
               </h2>
             </div>
-            <div className="divide-y divide-black/[0.04]">
-              {users?.map((user) => (
-                <div key={user.id} className="flex items-center justify-between px-6 py-4 gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar name={user.full_name} avatarUrl={user.avatar_url} size="sm" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.full_name}</p>
-                      <p className="text-xs text-gray-400">Joined {formatDate(user.created_at)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <RoleBadge role={user.role} />
-                    <ChangeRoleForm userId={user.id} currentRole={user.role} />
-                  </div>
-                </div>
-              ))}
-              {(!users || users.length === 0) && (
-                <p className="text-sm text-gray-400 text-center py-10">No users found.</p>
-              )}
-            </div>
+            <UserSearchList users={users ?? []} />
           </Card>
 
         </div>

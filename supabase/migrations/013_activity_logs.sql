@@ -10,6 +10,7 @@ CREATE TYPE activity_action AS ENUM (
   'media_uploaded',
   'media_deleted',
   'photo_reviewed',
+  'item_added',
   'member_added',
   'member_removed',
   'import_completed'

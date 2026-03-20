@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/session'
 import type { MediaCategory } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
+import { sendNotification } from '@/lib/notifications/send'
 
 export interface MediaActionState {
   error?: string
@@ -32,6 +33,20 @@ export async function saveMediaRecordAction(data: {
 
   if (error) {
     return { error: `Failed to save file: ${error.message}` }
+  }
+
+  // Only notify for live photos (field workers uploading progress photos)
+  if (data.category === 'live_photo') {
+    const { data: proj } = await supabase
+      .from('projects').select('project_code').eq('id', data.project_id).single()
+    const code = (proj as { project_code: string } | null)?.project_code ?? ''
+    await sendNotification({
+      actor:       { id: profile.id, full_name: profile.full_name },
+      projectId:   data.project_id,
+      projectCode: code,
+      type:        'photo_uploaded',
+      message:     `${profile.full_name} uploaded new photos to ${code}`,
+    })
   }
 
   await logActivity({

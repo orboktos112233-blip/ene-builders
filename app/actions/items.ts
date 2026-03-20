@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/session'
+import { logActivity } from '@/lib/activity/log'
+import { sendNotification } from '@/lib/notifications/send'
 
 export interface ItemActionState {
   error?: string
@@ -51,7 +53,7 @@ export async function addItemAction(
   _prev: ItemActionState,
   formData: FormData
 ): Promise<ItemActionState> {
-  await requireRole(['admin', 'project_manager'])
+  const profile = await requireRole(['admin', 'project_manager'])
 
   const raw = Object.fromEntries(formData)
   const parsed = addItemSchema.safeParse(raw)
@@ -89,6 +91,26 @@ export async function addItemAction(
   })
 
   if (error) return { error: 'Failed to add item.' }
+
+  await logActivity({
+    user_id:     profile.id,
+    action:      'item_added',
+    description: `Added item "${parsed.data.material || parsed.data.category || 'item'}"`,
+    project_id:  parsed.data.project_id,
+    entity_type: 'item',
+    metadata:    { section_id: parsed.data.section_id },
+  })
+
+  const { data: projItemRow } = await supabase
+    .from('projects').select('project_code').eq('id', parsed.data.project_id).single()
+  const itemCode = (projItemRow as { project_code: string } | null)?.project_code ?? ''
+  await sendNotification({
+    actor:       { id: profile.id, full_name: profile.full_name },
+    projectId:   parsed.data.project_id,
+    projectCode: itemCode,
+    type:        'item_added',
+    message:     `${profile.full_name} added a new item to ${itemCode}`,
+  })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return {}

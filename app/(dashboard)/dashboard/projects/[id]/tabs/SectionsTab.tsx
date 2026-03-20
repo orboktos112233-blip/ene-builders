@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import type { SectionWithItems } from '@/types/database'
 import { getItemTotal } from '@/types/database'
 import { formatCurrency } from '@/lib/utils'
@@ -22,6 +25,9 @@ export function SectionsTab({
   canEdit,
   canDelete,
 }: SectionsTabProps) {
+  const [query, setQuery] = useState('')
+
+  // ── Financial summary — always over full data ──────────────
   const allItems = sections.flatMap((s) => s.project_items)
   const totalItems = allItems.length
   const inProgress = allItems.filter((i) => i.status?.toLowerCase().includes('progress')).length
@@ -34,13 +40,31 @@ export function SectionsTab({
   const budget = budgetTotal ?? null
   const profit = budget != null ? budget - grandTotal : null
 
+  // ── Search filtering ───────────────────────────────────────
+  const q = query.trim().toLowerCase()
+
+  const displaySections: SectionWithItems[] = q
+    ? sections
+        .map((section) => ({
+          ...section,
+          project_items: section.project_items.filter((item) =>
+            (item.category ?? '').toLowerCase().includes(q) ||
+            (item.worker   ?? '').toLowerCase().includes(q) ||
+            (item.material ?? '').toLowerCase().includes(q) ||
+            (item.vendor   ?? '').toLowerCase().includes(q) ||
+            (item.status   ?? '').toLowerCase().includes(q) ||
+            (item.notes    ?? '').toLowerCase().includes(q)
+          ),
+        }))
+        .filter((section) => section.project_items.length > 0)
+    : sections
+
   return (
     <div className="space-y-5">
 
       {/* ── Financial summary ── */}
       {sections.length > 0 && hasPricing && (
         budget != null ? (
-          // Full 3-card financial bar when budget is set
           <div className="grid grid-cols-3 gap-4">
             <FinancialCard
               label="Budget / Revenue"
@@ -61,7 +85,6 @@ export function SectionsTab({
             />
           </div>
         ) : (
-          // Grand total hero banner when no budget
           <div className="relative overflow-hidden rounded-2xl bg-gray-900 px-8 py-7 text-white shadow-lg">
             <div className="absolute -right-6 -top-6 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
             <div className="absolute -right-2 bottom-0 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
@@ -110,7 +133,7 @@ export function SectionsTab({
         <AddSectionForm projectId={projectId} />
       )}
 
-      {/* Empty state */}
+      {/* Empty state — no sections at all */}
       {sections.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl py-20 text-center shadow-sm">
           <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
@@ -126,17 +149,68 @@ export function SectionsTab({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {sections.map((section) => (
-            <SectionCard
-              key={section.id}
-              section={section}
-              canManage={canManage}
-              canEdit={canEdit}
-              canDelete={canDelete}
+        <>
+          {/* ── Search bar ── */}
+          <div className="relative max-w-sm">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search items..."
+              className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
             />
-          ))}
-        </div>
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Clear search"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* ── No search results ── */}
+          {q && displaySections.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-2xl py-16 text-center shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-gray-600">No items found</p>
+              <p className="text-xs text-gray-400 mt-1">No results for &ldquo;{query}&rdquo;</p>
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="mt-4 text-xs text-violet-600 hover:text-violet-800 font-semibold transition-colors"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displaySections.map((section) => (
+                <SectionCard
+                  key={section.id}
+                  section={section}
+                  canManage={canManage}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

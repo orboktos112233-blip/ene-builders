@@ -75,6 +75,7 @@ const ACTION_CONFIG: Record<ActivityAction, ActionConfig> = {
   media_uploaded:   { label: 'File Uploaded',     icon: <PhotoIcon />,         iconBg: 'bg-violet-100',   iconColor: 'text-violet-600'  },
   media_deleted:    { label: 'File Deleted',      icon: <TrashIcon />,         iconBg: 'bg-rose-100',     iconColor: 'text-rose-500'    },
   photo_reviewed:   { label: 'Photo Reviewed',    icon: <CheckBadgeIcon />,    iconBg: 'bg-teal-100',     iconColor: 'text-teal-600'    },
+  item_added:       { label: 'Item Added',         icon: <FolderPlusIcon />,    iconBg: 'bg-emerald-100',  iconColor: 'text-emerald-600' },
   member_added:     { label: 'Member Added',      icon: <UserPlusIcon />,      iconBg: 'bg-cyan-100',     iconColor: 'text-cyan-600'    },
   member_removed:   { label: 'Member Removed',    icon: <UserMinusIcon />,     iconBg: 'bg-orange-100',   iconColor: 'text-orange-500'  },
   import_completed: { label: 'Import Completed',  icon: <ArrowDownTrayIcon />, iconBg: 'bg-slate-100',    iconColor: 'text-slate-500'   },

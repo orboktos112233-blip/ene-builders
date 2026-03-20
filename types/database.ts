@@ -234,6 +234,23 @@ export interface AssignmentWithProfile extends ProjectAssignment {
   profiles: Profile
 }
 
+export type NotificationType =
+  | 'photo_uploaded'
+  | 'status_changed'
+  | 'phase_updated'
+  | 'item_added'
+  | 'budget_updated'
+
+export interface Notification {
+  id: string
+  user_id: string
+  project_id: string | null
+  type: NotificationType
+  message: string
+  is_read: boolean
+  created_at: string
+}
+
 export type ActivityAction =
   | 'project_created'
   | 'project_updated'
@@ -243,6 +260,7 @@ export type ActivityAction =
   | 'media_uploaded'
   | 'media_deleted'
   | 'photo_reviewed'
+  | 'item_added'
   | 'member_added'
   | 'member_removed'
   | 'import_completed'

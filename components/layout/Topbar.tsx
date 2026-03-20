@@ -2,6 +2,7 @@
 
 import { logoutAction } from '@/app/actions/auth'
 import { useSidebar } from './SidebarContext'
+import { NotificationBell } from './NotificationBell'
 
 interface TopbarProps {
   title: string
@@ -25,14 +26,19 @@ export function Topbar({ title }: TopbarProps) {
         </button>
         <h1 className="text-[15px] font-semibold text-gray-900 tracking-tight">{title}</h1>
       </div>
-      <form action={logoutAction}>
-        <button
-          type="submit"
-          className="text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100/80"
-        >
-          Sign out
-        </button>
-      </form>
+
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <div className="w-px h-4 bg-gray-200 mx-1" />
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100/80"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
     </header>
   )
 }

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/session'
 import type { PhaseName, PhaseStatus } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
+import { sendNotification } from '@/lib/notifications/send'
 
 export interface PhaseActionState {
   error?: string
@@ -85,6 +86,17 @@ export async function updatePhaseAction(data: {
     project_id:  parsed.data.project_id,
     entity_type: 'phase',
     metadata:    { phase: parsed.data.phase, status: parsed.data.status },
+  })
+
+  const { data: projPhaseRow } = await supabase
+    .from('projects').select('project_code').eq('id', parsed.data.project_id).single()
+  const phaseCode = (projPhaseRow as { project_code: string } | null)?.project_code ?? ''
+  await sendNotification({
+    actor:       { id: profile.id, full_name: profile.full_name },
+    projectId:   parsed.data.project_id,
+    projectCode: phaseCode,
+    type:        'phase_updated',
+    message:     `${profile.full_name} updated the ${parsed.data.phase.replace(/_/g, ' ')} phase on ${phaseCode}`,
   })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)

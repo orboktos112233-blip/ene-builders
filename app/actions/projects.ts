@@ -8,6 +8,7 @@ import { requireAuth, requireRole } from '@/lib/auth/session'
 import { generateProjectCode } from '@/lib/projects/code'
 import type { ProjectStatus } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
+import { sendNotification } from '@/lib/notifications/send'
 
 export interface ProjectActionState {
   error?: string
@@ -151,6 +152,20 @@ export async function updateProjectDetailsAction(
     entity_id:   project_id,
   })
 
+  // Notify on budget change (budget_total is in parsed fields)
+  if (fields.budget_total !== undefined) {
+    const { data: projRow3 } = await supabase
+      .from('projects').select('project_code').eq('id', project_id).single()
+    const code3 = (projRow3 as { project_code: string } | null)?.project_code ?? ''
+    await sendNotification({
+      actor:       { id: profile.id, full_name: profile.full_name },
+      projectId:   project_id,
+      projectCode: code3,
+      type:        'budget_updated',
+      message:     `${profile.full_name} updated the budget for ${code3}`,
+    })
+  }
+
   revalidatePath(`/dashboard/projects/${project_id}`)
   revalidatePath('/dashboard/projects')
   revalidatePath('/dashboard')
@@ -196,6 +211,18 @@ export async function updateProjectStatusAction(
     entity_type: 'project',
     entity_id:   parsed.data.project_id,
     metadata:    { status: parsed.data.status },
+  })
+
+  // Notify project stakeholders
+  const { data: projRow } = await supabase
+    .from('projects').select('project_code').eq('id', parsed.data.project_id).single()
+  const code = (projRow as { project_code: string } | null)?.project_code ?? ''
+  await sendNotification({
+    actor:       { id: profile.id, full_name: profile.full_name },
+    projectId:   parsed.data.project_id,
+    projectCode: code,
+    type:        'status_changed',
+    message:     `${profile.full_name} changed ${code} status to ${parsed.data.status.replace(/_/g, ' ')}`,
   })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
@@ -286,6 +313,17 @@ export async function updateProjectStatusInlineAction(data: {
     entity_type: 'project',
     entity_id:   parsed.data.project_id,
     metadata:    { status: parsed.data.status },
+  })
+
+  const { data: projRow2 } = await supabase
+    .from('projects').select('project_code').eq('id', parsed.data.project_id).single()
+  const code2 = (projRow2 as { project_code: string } | null)?.project_code ?? ''
+  await sendNotification({
+    actor:       { id: profile.id, full_name: profile.full_name },
+    projectId:   parsed.data.project_id,
+    projectCode: code2,
+    type:        'status_changed',
+    message:     `${profile.full_name} changed ${code2} status to ${parsed.data.status.replace(/_/g, ' ')}`,
   })
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
