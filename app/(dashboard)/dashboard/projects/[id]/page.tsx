@@ -88,7 +88,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       .order('created_at', { ascending: false }),
     supabase
       .from('construction_phases')
-      .select('*')
+      .select('id, project_id, phase_name, status, notes, start_date, end_date, updated_by, updated_at')
       .eq('project_id', id)
       .order('updated_at', { ascending: false }),
   ])

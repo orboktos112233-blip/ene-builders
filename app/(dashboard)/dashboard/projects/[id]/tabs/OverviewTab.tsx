@@ -1,4 +1,5 @@
 import { ProjectDetailsCard } from '../ProjectDetailsCard'
+import { ProjectLocationMap } from '../ProjectLocationMap'
 import { ProjectMediaSection } from '@/components/media/ProjectMediaSection'
 import { ProjectFilesSection } from '@/components/media/ProjectFilesSection'
 import { DeleteProjectButton } from '../DeleteProjectButton'
@@ -26,6 +27,7 @@ export function OverviewTab({
   return (
     <div className="space-y-5">
       <ProjectDetailsCard project={project} canEdit={canEdit} />
+      <ProjectLocationMap address={project.address} />
       <ProjectMediaSection
         projectId={project.id}
         files={mediaFiles}

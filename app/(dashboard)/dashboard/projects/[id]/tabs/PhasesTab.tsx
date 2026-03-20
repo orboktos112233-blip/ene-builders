@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { updatePhaseAction } from '@/app/actions/phases'
@@ -143,6 +143,12 @@ function PhaseRow({
   const [startDraft, setStartDraft] = useState(startDate ?? '')
   const [endDraft, setEndDraft] = useState(endDate ?? '')
   const isActive = status === 'in_progress'
+
+  // Sync drafts with server-confirmed values after router.refresh().
+  // Only runs when the props actually change (shallow equality), so
+  // in-progress typing is never interrupted.
+  useEffect(() => { setStartDraft(startDate ?? '') }, [startDate])
+  useEffect(() => { setEndDraft(endDate ?? '') }, [endDate])
   const label = PHASE_LABELS[phase]
 
   const datesChanged = startDraft !== (startDate ?? '') || endDraft !== (endDate ?? '')
