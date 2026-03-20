@@ -9,41 +9,52 @@ interface BadgeProps {
   className?: string
 }
 
+const DOT_COLORS: Record<BadgeVariant, string> = {
+  gray:   'bg-gray-400',
+  blue:   'bg-blue-500',
+  yellow: 'bg-yellow-500',
+  orange: 'bg-orange-500',
+  green:  'bg-emerald-500',
+  red:    'bg-red-500',
+  purple: 'bg-purple-500',
+}
+
 export function Badge({ children, variant = 'gray', className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold',
         {
-          'bg-gray-100 text-gray-700': variant === 'gray',
-          'bg-blue-100 text-blue-700': variant === 'blue',
-          'bg-yellow-100 text-yellow-700': variant === 'yellow',
-          'bg-orange-100 text-orange-700': variant === 'orange',
-          'bg-green-100 text-green-700': variant === 'green',
-          'bg-red-100 text-red-700': variant === 'red',
-          'bg-purple-100 text-purple-700': variant === 'purple',
+          'bg-gray-100 text-gray-600':    variant === 'gray',
+          'bg-blue-50 text-blue-700':     variant === 'blue',
+          'bg-yellow-50 text-yellow-700': variant === 'yellow',
+          'bg-orange-50 text-orange-700': variant === 'orange',
+          'bg-emerald-50 text-emerald-700': variant === 'green',
+          'bg-red-50 text-red-700':       variant === 'red',
+          'bg-purple-50 text-purple-700': variant === 'purple',
         },
         className
       )}
     >
+      <span className={cn('inline-block w-1.5 h-1.5 rounded-full shrink-0', DOT_COLORS[variant])} />
       {children}
     </span>
   )
 }
 
 const STATUS_VARIANTS: Record<ProjectStatus, BadgeVariant> = {
-  planning: 'blue',
-  demolition: 'orange',
-  framing: 'yellow',
-  finishing: 'purple',
-  completed: 'green',
+  planning:    'gray',
+  in_progress: 'blue',
+  finishing:   'orange',
+  inspection:  'purple',
+  completed:   'green',
 }
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
   planning: 'Planning',
-  demolition: 'Demolition',
-  framing: 'Framing',
+  in_progress: 'In Progress',
   finishing: 'Finishing',
+  inspection: 'Inspection',
   completed: 'Completed',
 }
 

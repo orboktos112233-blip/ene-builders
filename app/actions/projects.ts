@@ -10,12 +10,13 @@ import type { ProjectStatus } from '@/types/database'
 
 export interface ProjectActionState {
   error?: string
+  success?: boolean
 }
 
 const createProjectSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters'),
   address: z.string().optional(),
-  status: z.enum(['planning', 'demolition', 'framing', 'finishing', 'completed']),
+  status: z.enum(['planning', 'in_progress', 'finishing', 'inspection', 'completed']),
   start_date: z.string().optional(),
   estimated_end_date: z.string().optional(),
   budget_total: z
@@ -75,9 +76,72 @@ export async function createProjectAction(
   redirect(`/dashboard/projects/${data.id}`)
 }
 
+const updateDetailsSchema = z.object({
+  project_id: z.string().uuid(),
+  name: z.string().min(2, 'Project name must be at least 2 characters'),
+  // Empty strings from unset form fields must become null (not ''), otherwise
+  // Postgres rejects them for date/text columns or they corrupt stored values.
+  address:            z.string().optional().transform((v) => v || null),
+  status: z.enum(['planning', 'in_progress', 'finishing', 'inspection', 'completed']),
+  start_date:         z.string().optional().transform((v) => v || null),
+  estimated_end_date: z.string().optional().transform((v) => v || null),
+  budget_total: z
+    .string()
+    .optional()
+    .transform((v) => (v && v !== '' ? parseFloat(v) : null)),
+  client_name:  z.string().optional().transform((v) => v || null),
+  client_email: z
+    .string()
+    .optional()
+    .refine((v) => !v || v === '' || z.string().email().safeParse(v).success, {
+      message: 'Invalid client email',
+    })
+    .transform((v) => v || null),
+  client_phone: z.string().optional().transform((v) => v || null),
+})
+
+export async function updateProjectDetailsAction(
+  _prev: ProjectActionState,
+  formData: FormData
+): Promise<ProjectActionState> {
+  await requireRole(['admin', 'project_manager', 'office'])
+
+  const raw = Object.fromEntries(formData)
+
+  console.log('[updateProject] raw form data:', JSON.stringify(raw))
+
+  const parsed = updateDetailsSchema.safeParse(raw)
+
+  if (!parsed.success) {
+    console.log('[updateProject] validation failed:', parsed.error.issues)
+    return { error: parsed.error.issues[0].message }
+  }
+
+  const { project_id, ...fields } = parsed.data
+
+  console.log('[updateProject] parsed payload:', JSON.stringify({ project_id, ...fields }))
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('projects')
+    .update(fields)
+    .eq('id', project_id)
+
+  if (error) {
+    console.error('[updateProject] DB error:', error)
+    return { error: `Update failed: ${error.message}` }
+  }
+
+  revalidatePath(`/dashboard/projects/${project_id}`)
+  revalidatePath('/dashboard/projects')
+  revalidatePath('/dashboard')
+
+  return { success: true }
+}
+
 const updateStatusSchema = z.object({
   project_id: z.string().uuid(),
-  status: z.enum(['planning', 'demolition', 'framing', 'finishing', 'completed']),
+  status: z.enum(['planning', 'in_progress', 'finishing', 'inspection', 'completed']),
 })
 
 export async function updateProjectStatusAction(

@@ -11,9 +11,12 @@ import {
   canManageItems,
   canDeleteItems,
   canImportProjects,
+  canUploadMedia,
+  canDeleteMedia,
 } from '@/lib/auth/permissions'
 import { OverviewTab } from './tabs/OverviewTab'
 import { SectionsTab } from './tabs/SectionsTab'
+import { TeamTab } from './tabs/TeamTab'
 import { ImportHistoryTab } from './tabs/ImportHistoryTab'
 import type {
   Project,
@@ -21,6 +24,7 @@ import type {
   ProjectAssignment,
   ProjectImportRun,
   SectionWithItems,
+  MediaFile,
 } from '@/types/database'
 
 interface PageProps {
@@ -51,6 +55,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     { data: allUsersData },
     { data: sectionsData },
     { data: importRunData },
+    { data: mediaFilesData },
   ] = await Promise.all([
     supabase.from('projects').select('*').eq('id', id).single(),
     supabase.from('project_assignments').select('*, profiles(*)').eq('project_id', id),
@@ -71,6 +76,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
           .limit(1)
           .single()
       : Promise.resolve({ data: null }),
+    supabase
+      .from('media_files')
+      .select('*')
+      .eq('project_id', id)
+      .order('created_at', { ascending: false }),
   ])
 
   const project = projectData as Project | null
@@ -80,8 +90,12 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const allUsers = (allUsersData ?? []) as Profile[]
   const sections = (sectionsData ?? []) as SectionWithItems[]
   const importRun = importRunData as (ProjectImportRun & { profiles: Profile }) | null
+  const allMediaFiles = (mediaFilesData ?? []) as MediaFile[]
 
-  // Sort items within each section by display_order
+  // Split media files into media (photos/videos) and documents
+  const mediaFiles = allMediaFiles.filter((f) => f.file_type.startsWith('image/') || f.file_type.startsWith('video/'))
+  const projectFiles = allMediaFiles.filter((f) => !f.file_type.startsWith('image/') && !f.file_type.startsWith('video/'))
+
   for (const section of sections) {
     section.project_items = section.project_items.sort(
       (a, b) => a.display_order - b.display_order
@@ -93,21 +107,24 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
   const tabs = [
     { key: 'overview', label: 'Overview' },
-    { key: 'sections', label: `Sections & Items${sections.length > 0 ? ` (${sections.length})` : ''}` },
+    { key: 'sections', label: sections.length > 0 ? `Sections & Items (${sections.length})` : 'Sections & Items' },
+    { key: 'team', label: assignments.length > 0 ? `Team (${assignments.length})` : 'Team' },
     ...(canImportProjects(profile.role) ? [{ key: 'import-history', label: 'Import History' }] : []),
   ]
 
   return (
     <>
       <Topbar title={project.name} />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-slate-50">
         <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
 
           {/* Breadcrumb */}
-          <nav className="text-xs text-gray-400 flex items-center gap-1.5">
-            <Link href="/dashboard/projects" className="hover:text-gray-600">Projects</Link>
-            <span>/</span>
-            <span className="text-gray-600">{project.project_code}</span>
+          <nav className="flex items-center gap-2 text-xs">
+            <Link href="/dashboard/projects" className="text-gray-400 hover:text-gray-600 transition-colors font-medium">
+              Projects
+            </Link>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-600 font-semibold">{project.project_code}</span>
           </nav>
 
           {/* Tab bar */}
@@ -117,10 +134,10 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
                 key={key}
                 href={`/dashboard/projects/${id}?tab=${key}`}
                 className={cn(
-                  'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+                  'px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all duration-150 whitespace-nowrap',
                   tab === key
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-800'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
                 )}
               >
                 {label}
@@ -132,10 +149,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
           {tab === 'overview' && (
             <OverviewTab
               project={project}
-              assignments={assignments}
-              unassignedUsers={unassignedUsers}
               canEdit={canEditProject(profile.role)}
-              canManageTeam={canManageAssignments(profile.role)}
+              mediaFiles={mediaFiles}
+              projectFiles={projectFiles}
+              canUpload={canUploadMedia(profile.role)}
+              canDelete={canDeleteMedia(profile.role)}
             />
           )}
 
@@ -143,9 +161,19 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
             <SectionsTab
               projectId={project.id}
               sections={sections}
+              budgetTotal={project.budget_total}
               canManage={canManageSections(profile.role)}
               canEdit={canManageItems(profile.role)}
               canDelete={canDeleteItems(profile.role)}
+            />
+          )}
+
+          {tab === 'team' && (
+            <TeamTab
+              projectId={project.id}
+              assignments={assignments}
+              unassignedUsers={unassignedUsers}
+              canManageTeam={canManageAssignments(profile.role)}
             />
           )}
 

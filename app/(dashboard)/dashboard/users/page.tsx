@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Topbar } from '@/components/layout/Topbar'
 import { Card } from '@/components/ui/Card'
 import { RoleBadge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/ui/Avatar'
 import { formatDate } from '@/lib/utils'
 import { InviteUserForm } from './InviteUserForm'
 import { ChangeRoleForm } from './ChangeRoleForm'
@@ -51,9 +52,7 @@ export default async function UsersPage() {
               {users?.map((user) => (
                 <div key={user.id} className="flex items-center justify-between px-6 py-3 gap-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                      {user.full_name.charAt(0).toUpperCase()}
-                    </div>
+                    <Avatar name={user.full_name} avatarUrl={user.avatar_url} size="sm" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{user.full_name}</p>
                       <p className="text-xs text-gray-400">Joined {formatDate(user.created_at)}</p>

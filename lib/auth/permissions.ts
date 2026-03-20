@@ -47,3 +47,11 @@ export function canManageItems(role: Role): boolean {
 export function canDeleteItems(role: Role): boolean {
   return role === 'admin'
 }
+
+export function canUploadMedia(role: Role): boolean {
+  return role === 'admin' || role === 'office' || role === 'project_manager' || role === 'worker'
+}
+
+export function canDeleteMedia(role: Role): boolean {
+  return role === 'admin' || role === 'office' || role === 'project_manager'
+}

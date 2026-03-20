@@ -42,6 +42,11 @@ export async function importProjectAction(
     return { error: 'Invalid import data. Please try uploading again.' }
   }
 
+  // Diagnostic: log what the parser returned
+  console.log('[import] sections:', parsedFile.sections.length)
+  console.log('[import] total items:', parsedFile.sections.reduce((n, s) => n + s.items.length, 0))
+  console.log('[import] section names:', parsedFile.sections.map((s) => s.name))
+
   const supabase = await createClient()
   const project_code = await generateProjectCode(supabase)
 
@@ -58,12 +63,14 @@ export async function importProjectAction(
     .single()
 
   if (projectError || !projectData) {
-    return { error: 'Failed to create project.' }
+    console.error('[import] project insert failed:', projectError)
+    return { error: `Failed to create project: ${projectError?.message ?? 'unknown error'}` }
   }
 
   const projectId = (projectData as { id: string }).id
   let sectionsCreated = 0
   let itemsCreated = 0
+  const sectionErrors: string[] = []
 
   // ── 2. Create sections and items ─────────────────────────
   for (const section of parsedFile.sections) {
@@ -77,7 +84,11 @@ export async function importProjectAction(
       .select('id')
       .single()
 
-    if (sectionError || !sectionData) continue
+    if (sectionError || !sectionData) {
+      console.error(`[import] section "${section.name}" insert failed:`, sectionError)
+      sectionErrors.push(`Section "${section.name}": ${sectionError?.message ?? 'unknown error'}`)
+      continue
+    }
 
     sectionsCreated++
     const sectionId = (sectionData as { id: string }).id
@@ -87,27 +98,41 @@ export async function importProjectAction(
     const itemRows = section.items.map((item) => ({
       project_id: projectId,
       section_id: sectionId,
-      category: item.category || null,
-      worker: item.worker || null,
-      material: item.material || null,
-      quantity: item.quantity,
+      category:     item.category     || null,
+      worker:       item.worker       || null,
+      material:     item.material     || null,
+      quantity:     item.quantity,
       raw_quantity: item.raw_quantity || null,
-      unit: item.unit || null,
-      vendor: item.vendor || null,
-      status: item.status || null,
-      notes: item.notes || null,
+      unit:         item.unit         || null,
+      unit_price:   item.unit_price,
+      total_price:  item.total_price,
+      vendor:       item.vendor       || null,
+      status:       item.status       || null,
+      notes:        item.notes        || null,
       display_order: item.display_order,
     }))
 
-    const { error: itemsError } = await supabase
+    const { error: itemsError, count } = await supabase
       .from('project_items')
       .insert(itemRows)
 
-    if (!itemsError) itemsCreated += section.items.length
+    if (itemsError) {
+      console.error(`[import] items insert failed for section "${section.name}":`, itemsError)
+      sectionErrors.push(`Items for "${section.name}": ${itemsError.message}`)
+    } else {
+      itemsCreated += section.items.length
+    }
+  }
+
+  // If every section failed, abort and clean up
+  if (sectionsCreated === 0 && parsedFile.sections.length > 0) {
+    await supabase.from('projects').delete().eq('id', projectId)
+    const firstError = sectionErrors[0] ?? 'Unknown error'
+    return { error: `Import failed — could not create sections. ${firstError}` }
   }
 
   // ── 3. Record import run ──────────────────────────────────
-  await supabase.from('project_import_runs').insert({
+  const { error: runError } = await supabase.from('project_import_runs').insert({
     project_id: projectId,
     imported_by: profile.id,
     source_file_name: parsed.data.file_name,
@@ -120,8 +145,15 @@ export async function importProjectAction(
     parse_warnings: parsedFile.parseWarnings.length > 0
       ? parsedFile.parseWarnings.map((w) => ({ row_number: w.rowNumber, message: w.message }))
       : null,
-    status: 'completed',
+    status: sectionErrors.length > 0 ? 'failed_partial' : 'completed',
   })
 
-  redirect(`/dashboard/projects/${projectId}`)
+  if (runError) {
+    console.error('[import] import_run insert failed:', runError)
+    // Non-fatal — data was saved, just the audit record failed
+  }
+
+  console.log(`[import] done. sections=${sectionsCreated}, items=${itemsCreated}, errors=${sectionErrors.length}`)
+
+  redirect(`/dashboard/projects/${projectId}?tab=sections`)
 }

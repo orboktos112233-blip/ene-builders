@@ -1,27 +1,46 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useRef, useEffect, useActionState } from 'react'
 import { updateItemAction, deleteItemAction, type ItemActionState } from '@/app/actions/items'
 import { ItemStatusBadge } from '@/components/ui/Badge'
 import { NotesCell } from '@/components/ui/NotesCell'
 import { Button } from '@/components/ui/Button'
 import { formatCurrencyCompact } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { getItemTotal } from '@/types/database'
 import type { ProjectItem } from '@/types/database'
 
 const initialState: ItemActionState = {}
 const STATUS_SUGGESTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled']
 
-function empty(v: string | null | undefined): boolean {
-  return !v || v.trim() === ''
-}
+// Input styles — consistent across all edit cells
+const iCls =
+  'w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white ' +
+  'placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ' +
+  'focus:border-indigo-400 transition-colors'
+const iClsR = iCls + ' text-right tabular-nums'
 
 function display(v: string | number | null | undefined): string {
   if (v === null || v === undefined || v === '') return '—'
   return String(v)
 }
 
-// ── Single editable item row ──────────────────────────────────
+// ── Column definitions ────────────────────────────────────────
+// Used to keep header and rows in lockstep.
+
+const COLUMNS = [
+  { label: 'Category',    align: 'left',  width: 'w-[110px]' },
+  { label: 'Worker',      align: 'left',  width: 'w-[110px]' },
+  { label: 'Material',    align: 'left',  width: ''           }, // flex grow
+  { label: 'Qty',         align: 'right', width: 'w-[80px]'  },
+  { label: 'Vendor',      align: 'left',  width: 'w-[110px]' },
+  { label: 'Status',      align: 'left',  width: 'w-[110px]' },
+  { label: 'Notes',       align: 'left',  width: 'w-[160px]' },
+  { label: 'Total',       align: 'right', width: 'w-[100px]' },
+  { label: '',            align: 'right', width: 'w-[70px]'  },
+] as const
+
+// ── Single row ────────────────────────────────────────────────
 
 function ItemRow({
   item,
@@ -35,127 +54,165 @@ function ItemRow({
   canDelete: boolean
 }) {
   const [editing, setEditing] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [updateState, updateAction, updatePending] = useActionState(updateItemAction, initialState)
-  const [deleteState, deleteAction, deletePending] = useActionState(deleteItemAction, initialState)
+  const [, deleteAction, deletePending] = useActionState(deleteItemAction, initialState)
+  const prevPending = useRef(false)
 
-  const qtyDisplay = item.quantity != null
-    ? `${item.quantity}${item.unit ? ` ${item.unit}` : ''}`
-    : '—'
+  // Detect successful save → brief green flash → close
+  useEffect(() => {
+    if (prevPending.current && !updatePending) {
+      if (!updateState.error) {
+        setSaved(true)
+        const t = setTimeout(() => { setSaved(false); setEditing(false) }, 500)
+        return () => clearTimeout(t)
+      }
+    }
+    prevPending.current = updatePending
+  }, [updatePending, updateState.error])
 
+  const qtyDisplay =
+    item.quantity != null
+      ? `${item.quantity}${item.unit ? ` ${item.unit}` : ''}`
+      : '—'
   const rowTotal = getItemTotal(item)
 
+  // ── Edit mode ─────────────────────────────────────────
   if (editing) {
+    const formId = `edit-${item.id}`
     return (
-      <tr className="bg-blue-50/30">
-        <td className="px-3 py-2">
-          <form
-            id={`edit-${item.id}`}
-            action={async (fd) => {
-              await updateAction(fd)
-              setEditing(false)
-            }}
-          >
-            <input type="hidden" name="item_id" value={item.id} />
+      <tr
+        className={cn(
+          'border-b transition-colors duration-300',
+          saved
+            ? 'bg-emerald-50 border-emerald-100'
+            : 'bg-indigo-50/20 border-indigo-100/60'
+        )}
+        onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
+      >
+        {/* Hidden form that all inputs submit to */}
+        <td className="px-2 py-2">
+          <form id={formId} action={updateAction}>
+            <input type="hidden" name="item_id"    value={item.id} />
             <input type="hidden" name="project_id" value={projectId} />
           </form>
           <input
-            form={`edit-${item.id}`}
-            name="material"
-            defaultValue={item.material ?? ''}
-            placeholder="Material"
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            form={formId}
+            name="category"
+            defaultValue={item.category ?? ''}
+            placeholder="Category"
+            className={iCls}
           />
         </td>
-        <td className="px-3 py-2">
-          <div className="flex gap-1">
-            <input
-              form={`edit-${item.id}`}
-              name="quantity"
-              type="number"
-              step="any"
-              defaultValue={item.quantity ?? ''}
-              placeholder="Qty"
-              className="w-16 text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <input
-              form={`edit-${item.id}`}
-              name="unit"
-              defaultValue={item.unit ?? ''}
-              placeholder="unit"
-              className="w-14 text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-        </td>
-        <td className="px-3 py-2">
+
+        <td className="px-2 py-2">
           <input
-            form={`edit-${item.id}`}
+            form={formId}
+            name="worker"
+            defaultValue={item.worker ?? ''}
+            placeholder="Worker"
+            className={iCls}
+          />
+        </td>
+
+        <td className="px-2 py-2">
+          <input
+            form={formId}
+            name="material"
+            defaultValue={item.material ?? ''}
+            placeholder="Material / Description"
+            className={iCls + ' font-medium'}
+            autoFocus
+          />
+        </td>
+
+        {/* Qty + Unit stacked in one cell */}
+        <td className="px-2 py-2">
+          <input
+            form={formId}
+            name="quantity"
+            type="number"
+            step="any"
+            defaultValue={item.quantity ?? ''}
+            placeholder="0"
+            className={iClsR}
+          />
+          <input
+            form={formId}
+            name="unit"
+            defaultValue={item.unit ?? ''}
+            placeholder="unit"
+            className={iCls + ' mt-1'}
+          />
+        </td>
+
+        <td className="px-2 py-2">
+          <input
+            form={formId}
+            name="vendor"
+            defaultValue={item.vendor ?? ''}
+            placeholder="Vendor"
+            className={iCls}
+          />
+        </td>
+
+        <td className="px-2 py-2">
+          <input
+            form={formId}
+            name="status"
+            defaultValue={item.status ?? ''}
+            placeholder="Status"
+            list={`status-opts-${item.id}`}
+            className={iCls}
+          />
+          <datalist id={`status-opts-${item.id}`}>
+            {STATUS_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
+          </datalist>
+        </td>
+
+        <td className="px-2 py-2">
+          <input
+            form={formId}
+            name="notes"
+            defaultValue={item.notes ?? ''}
+            placeholder="Notes"
+            className={iCls}
+          />
+        </td>
+
+        {/* Unit price + Total stacked — unit_price feeds auto-calc */}
+        <td className="px-2 py-2">
+          <input
+            form={formId}
             name="unit_price"
             type="number"
             step="any"
             defaultValue={item.unit_price ?? ''}
-            placeholder="0.00"
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Unit $"
+            className={iClsR}
           />
-        </td>
-        <td className="px-3 py-2">
           <input
-            form={`edit-${item.id}`}
+            form={formId}
             name="total_price"
             type="number"
             step="any"
             defaultValue={item.total_price ?? ''}
-            placeholder="auto"
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Total"
+            className={iClsR + ' mt-1'}
           />
         </td>
-        <td className="px-3 py-2">
-          <input
-            form={`edit-${item.id}`}
-            name="status"
-            defaultValue={item.status ?? ''}
-            placeholder="Status"
-            list="status-suggestions-edit"
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <datalist id="status-suggestions-edit">
-            {STATUS_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
-          </datalist>
-        </td>
-        <td className="px-3 py-2">
-          <input
-            form={`edit-${item.id}`}
-            name="notes"
-            defaultValue={item.notes ?? ''}
-            placeholder="Notes"
-            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </td>
-        {/* hidden fields for non-displayed columns */}
-        <input form={`edit-${item.id}`} type="hidden" name="category" value={item.category ?? ''} />
-        <input form={`edit-${item.id}`} type="hidden" name="worker" value={item.worker ?? ''} />
-        <input form={`edit-${item.id}`} type="hidden" name="vendor" value={item.vendor ?? ''} />
-        <td className="px-3 py-2 whitespace-nowrap">
+
+        {/* Save / Cancel */}
+        <td className="px-2 py-2 whitespace-nowrap align-top">
           {updateState.error && (
-            <span className="text-xs text-red-600 block mb-1">{updateState.error}</span>
+            <p className="text-[11px] text-red-500 mb-1">{updateState.error}</p>
           )}
-          <div className="flex gap-1">
-            <Button
-              form={`edit-${item.id}`}
-              type="submit"
-              size="sm"
-              loading={updatePending}
-              className="text-xs"
-            >
-              Save
+          <div className="flex flex-col gap-1">
+            <Button form={formId} type="submit" size="sm" loading={updatePending || saved}>
+              {saved ? '✓' : 'Save'}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditing(false)}
-              className="text-xs"
-            >
-              Cancel
+            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
+              Esc
             </Button>
           </div>
         </td>
@@ -163,51 +220,72 @@ function ItemRow({
     )
   }
 
+  // ── Read mode ─────────────────────────────────────────
   return (
-    <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 group">
-      <td className="px-3 py-2.5 text-xs text-gray-700">{display(item.material)}</td>
-      <td className="px-3 py-2.5 text-xs text-gray-700 text-right whitespace-nowrap">{qtyDisplay}</td>
-      <td className="px-3 py-2.5 text-xs text-gray-700 text-right whitespace-nowrap">
-        {formatCurrencyCompact(item.unit_price)}
+    <tr className="border-b border-gray-50 last:border-0 hover:bg-slate-50/60 group transition-colors duration-100">
+      {/* Category */}
+      <td className="px-3 py-2.5">
+        <span className="text-xs text-gray-500">{display(item.category)}</span>
       </td>
-      <td className="px-3 py-2.5 text-xs font-medium text-gray-900 text-right whitespace-nowrap">
-        {formatCurrencyCompact(rowTotal)}
+
+      {/* Worker */}
+      <td className="px-3 py-2.5">
+        <span className="text-xs text-gray-500">{display(item.worker)}</span>
       </td>
-      <td className="px-3 py-2.5 text-xs">
+
+      {/* Material — primary, bold */}
+      <td className="px-3 py-2.5">
+        <span className="text-sm font-semibold text-gray-800">{display(item.material)}</span>
+      </td>
+
+      {/* Quantity */}
+      <td className="px-3 py-2.5 text-xs text-gray-600 text-right whitespace-nowrap tabular-nums">
+        {qtyDisplay}
+      </td>
+
+      {/* Vendor */}
+      <td className="px-3 py-2.5">
+        <span className="text-xs text-gray-500">{display(item.vendor)}</span>
+      </td>
+
+      {/* Status */}
+      <td className="px-3 py-2.5">
         <ItemStatusBadge status={item.status} />
       </td>
-      <td className="px-3 py-2.5 text-xs text-gray-500 max-w-[200px]">
+
+      {/* Notes */}
+      <td className="px-3 py-2.5 max-w-[160px]">
         <NotesCell notes={item.notes} />
       </td>
-      <td className="px-3 py-2.5 text-xs">
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+      {/* Total Price */}
+      <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
+        <span className="text-sm font-bold text-gray-900">{formatCurrencyCompact(rowTotal)}</span>
+      </td>
+
+      {/* Row actions — visible on hover */}
+      <td className="px-3 py-2.5 text-right">
+        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
           {canEdit && (
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
               onClick={() => setEditing(true)}
-              className="text-xs text-gray-400 hover:text-gray-700 h-6 px-2"
+              className="text-[11px] font-semibold text-gray-400 hover:text-indigo-600 px-2 py-1 rounded-md hover:bg-indigo-50 transition-colors"
             >
               Edit
-            </Button>
+            </button>
           )}
           {canDelete && (
             <form action={deleteAction}>
-              <input type="hidden" name="item_id" value={item.id} />
+              <input type="hidden" name="item_id"    value={item.id} />
               <input type="hidden" name="project_id" value={projectId} />
-              {deleteState.error && (
-                <span className="text-xs text-red-600">{deleteState.error}</span>
-              )}
-              <Button
+              <button
                 type="submit"
-                variant="ghost"
-                size="sm"
-                loading={deletePending}
-                className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50 h-6 px-2"
+                disabled={deletePending}
+                className="text-[11px] font-semibold text-gray-400 hover:text-red-500 px-2 py-1 rounded-md hover:bg-red-50 transition-colors disabled:opacity-40"
               >
                 ×
-              </Button>
+              </button>
             </form>
           )}
         </div>
@@ -216,7 +294,7 @@ function ItemRow({
   )
 }
 
-// ── Items table ───────────────────────────────────────────────
+// ── Table ─────────────────────────────────────────────────────
 
 interface ItemsTableProps {
   items: ProjectItem[]
@@ -226,33 +304,23 @@ interface ItemsTableProps {
 }
 
 export function ItemsTable({ items, projectId, canEdit, canDelete }: ItemsTableProps) {
-  if (items.length === 0) {
-    return (
-      <div className="px-4 py-6 text-center">
-        <p className="text-xs text-gray-400">No items yet.</p>
-      </div>
-    )
-  }
+  if (items.length === 0) return null  // empty state handled by SectionCard
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-[860px]">
         <thead>
-          <tr className="border-b border-gray-100">
-            {[
-              { label: 'Material', align: 'left' },
-              { label: 'Qty', align: 'right' },
-              { label: 'Unit Price', align: 'right' },
-              { label: 'Total', align: 'right' },
-              { label: 'Status', align: 'left' },
-              { label: 'Notes', align: 'left' },
-              { label: '', align: 'left' },
-            ].map((h) => (
+          <tr className="border-b border-gray-100 bg-gray-50/70">
+            {COLUMNS.map((col, i) => (
               <th
-                key={h.label}
-                className={`px-3 py-2 text-xs font-medium text-gray-400 bg-white ${h.align === 'right' ? 'text-right' : 'text-left'}`}
+                key={i}
+                className={cn(
+                  'px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest',
+                  col.width,
+                  col.align === 'right' ? 'text-right' : 'text-left'
+                )}
               >
-                {h.label}
+                {col.label}
               </th>
             ))}
           </tr>

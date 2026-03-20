@@ -6,7 +6,7 @@ export type Role = 'admin' | 'office' | 'project_manager' | 'worker' | 'client'
 
 export type AssignmentRole = 'project_manager' | 'worker' | 'client' | 'office_viewer'
 
-export type ProjectStatus = 'planning' | 'demolition' | 'framing' | 'finishing' | 'completed'
+export type ProjectStatus = 'planning' | 'in_progress' | 'finishing' | 'inspection' | 'completed'
 
 export type MediaCategory =
   | 'before'

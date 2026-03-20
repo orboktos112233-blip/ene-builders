@@ -1,14 +1,19 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useState, useRef, useEffect, useActionState } from 'react'
 import { addItemAction, type ItemActionState } from '@/app/actions/items'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { FormError } from '@/components/ui/FormError'
 
 const initialState: ItemActionState = {}
-
 const STATUS_SUGGESTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled']
+
+const iCls =
+  'w-full text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-colors'
+const iClsR = iCls + ' text-right tabular-nums'
+
+// Session-level memory — survives form unmount/remount within same page session
+const lastUsed = { category: '', vendor: '', worker: '' }
 
 interface AddItemFormProps {
   projectId: string
@@ -18,53 +23,119 @@ interface AddItemFormProps {
 
 export function AddItemForm({ projectId, sectionId, onClose }: AddItemFormProps) {
   const [state, action, pending] = useActionState(addItemAction, initialState)
+  // formKey increments after each successful save to remount inputs (reset + refocus)
+  const [formKey, setFormKey] = useState(0)
+  const [savedCount, setSavedCount] = useState(0)
+  const formRef = useRef<HTMLFormElement>(null)
+  const prevPending = useRef(false)
+
+  // Detect successful save → capture last-used values, remount form, refocus Material
+  useEffect(() => {
+    if (prevPending.current && !pending) {
+      if (!state.error) {
+        // Capture current field values before the remount wipes them
+        if (formRef.current) {
+          const fd = new FormData(formRef.current)
+          const cat = fd.get('category') as string
+          const ven = fd.get('vendor') as string
+          const wrk = fd.get('worker') as string
+          if (cat) lastUsed.category = cat
+          if (ven) lastUsed.vendor = ven
+          if (wrk) lastUsed.worker = wrk
+        }
+        setSavedCount((n) => n + 1)
+        setFormKey((k) => k + 1)  // remounts inputs → autoFocus fires on Material
+      }
+    }
+    prevPending.current = pending
+  }, [pending, state.error])
 
   return (
     <form
-      action={async (fd) => {
-        await action(fd)
-        onClose()
-      }}
-      className="p-4 bg-blue-50/40 space-y-3"
+      ref={formRef}
+      action={action}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+      className="px-4 py-4 bg-indigo-50/30 border-b border-indigo-100"
     >
       <input type="hidden" name="project_id" value={projectId} />
       <input type="hidden" name="section_id" value={sectionId} />
 
-      <FormError message={state.error} />
+      {/* Status bar: errors or save confirmation */}
+      {state.error
+        ? <FormError message={state.error} />
+        : savedCount > 0 && (
+          <p className="text-[11px] font-semibold text-emerald-600 mb-2">
+            ✓ Item saved — enter another or press Escape to close
+          </p>
+        )
+      }
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Input name="material" placeholder="Material / Description" className="text-sm" />
-        <div className="flex gap-2">
-          <Input name="quantity" type="number" step="any" placeholder="Qty" className="text-sm" />
-          <Input name="unit" placeholder="Unit" className="text-sm w-20" />
+      {/* Fields in the same column order as the table: Category | Worker | Material | Qty | Vendor | Status | Notes | Unit Price + Total */}
+      <div key={formKey} className="grid grid-cols-[110px_110px_1fr_90px_110px_120px_160px_120px] gap-2 mb-3 min-w-[860px]">
+        <input
+          name="category"
+          placeholder="Category"
+          defaultValue={lastUsed.category}
+          className={iCls}
+        />
+        <input
+          name="worker"
+          placeholder="Worker"
+          defaultValue={lastUsed.worker}
+          className={iCls}
+        />
+        <input
+          name="material"
+          placeholder="Material / Description"
+          className={iCls + ' font-medium'}
+          autoFocus
+        />
+        <div className="flex flex-col gap-1">
+          <input name="quantity" type="number" step="any" placeholder="Qty"  className={iClsR} />
+          <input name="unit"                              placeholder="unit" className={iCls}  />
         </div>
-        <Input name="unit_price" type="number" step="any" placeholder="Unit Price ($)" className="text-sm" />
-        <Input name="total_price" type="number" step="any" placeholder="Total ($) — optional" className="text-sm" />
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Input name="category" placeholder="Category" className="text-sm" />
-        <Input name="worker" placeholder="Worker" className="text-sm" />
-        <Input name="vendor" placeholder="Vendor/Supplier" className="text-sm" />
+        <input
+          name="vendor"
+          placeholder="Vendor"
+          defaultValue={lastUsed.vendor}
+          className={iCls}
+        />
         <div>
-          <Input
+          <input
             name="status"
             placeholder="Status"
-            className="text-sm"
-            list="status-suggestions"
-            defaultValue="Pending"
+            className={iCls}
+            list="add-item-status-opts"
+            defaultValue="In Progress"
           />
-          <datalist id="status-suggestions">
+          <datalist id="add-item-status-opts">
             {STATUS_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
           </datalist>
         </div>
+        <input name="notes" placeholder="Notes" className={iCls} />
+        <div className="flex flex-col gap-1">
+          <input name="unit_price"  type="number" step="any" placeholder="Unit $"     className={iClsR} />
+          <input name="total_price" type="number" step="any" placeholder="Total (auto)" className={iClsR} />
+        </div>
       </div>
 
-      <Input name="notes" placeholder="Notes" className="text-sm" />
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-        <Button type="submit" size="sm" loading={pending}>Save Item</Button>
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] text-gray-400">
+          <kbd className="font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-500">Enter</kbd> saves ·{' '}
+          <kbd className="font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-500">Esc</kbd> closes
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs font-medium text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Close
+          </button>
+          <Button type="submit" size="sm" loading={pending}>
+            Save Item
+          </Button>
+        </div>
       </div>
     </form>
   )

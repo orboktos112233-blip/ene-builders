@@ -21,9 +21,9 @@ export function UpdateStatusForm({ projectId, currentStatus }: UpdateStatusFormP
       <input type="hidden" name="project_id" value={projectId} />
       <Select name="status" defaultValue={currentStatus} className="text-xs h-8 py-1">
         <option value="planning">Planning</option>
-        <option value="demolition">Demolition</option>
-        <option value="framing">Framing</option>
+        <option value="in_progress">In Progress</option>
         <option value="finishing">Finishing</option>
+        <option value="inspection">Inspection</option>
         <option value="completed">Completed</option>
       </Select>
       <Button type="submit" variant="secondary" size="sm" loading={pending}>
