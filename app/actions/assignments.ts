@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/session'
 import { logActivity } from '@/lib/activity/log'
+import { postSystemMessage } from '@/lib/project-chat/system-messages'
 
 export interface AssignmentActionState {
   error?: string
@@ -51,6 +52,19 @@ export async function assignUserAction(
     metadata:    { user_id: parsed.data.user_id, assignment_role: parsed.data.assignment_role },
   })
 
+  // Fetch added user's name for system message
+  const { data: addedUser } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', parsed.data.user_id)
+    .single()
+  const addedName = (addedUser as { full_name: string } | null)?.full_name ?? 'A team member'
+  await postSystemMessage(
+    parsed.data.project_id,
+    `${addedName} was added to the project`,
+    'member_added',
+  )
+
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return {}
 }
@@ -92,6 +106,12 @@ export async function removeAssignmentAction(
     project_id:  parsed.data.project_id,
     entity_type: 'assignment',
   })
+
+  await postSystemMessage(
+    parsed.data.project_id,
+    `A team member was removed from the project`,
+    'member_removed',
+  )
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return {}

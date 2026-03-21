@@ -25,6 +25,7 @@ import { PhasesTab } from './tabs/PhasesTab'
 import { TeamTab } from './tabs/TeamTab'
 import { ImportHistoryTab } from './tabs/ImportHistoryTab'
 import { PhotoLiveTab } from './tabs/PhotoLiveTab'
+import { ProjectChatTab } from './tabs/ProjectChatTab'
 import type {
   Project,
   Profile,
@@ -34,6 +35,7 @@ import type {
   MediaFile,
   ConstructionPhase,
   LivePhotoWithUploader,
+  ProjectChatMessageWithSender,
 } from '@/types/database'
 
 interface PageProps {
@@ -71,6 +73,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     // both reference profiles (uploaded_by + reviewed_by). We resolve profiles
     // in a separate query below, which is always reliable.
     { data: rawLivePhotosData, error: livePhotosError },
+    { data: rawChatMessages },
+    { data: chatReadRow },
   ] = await Promise.all([
     supabase.from('projects').select('*').eq('id', id).single(),
     supabase.from('project_assignments').select('*, profiles(*)').eq('project_id', id),
@@ -108,6 +112,19 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       .eq('project_id', id)
       .eq('category', 'live_photo')
       .order('created_at', { ascending: false }),
+    // Project chat: plain select, profiles resolved below
+    supabase
+      .from('project_chat_messages')
+      .select('*')
+      .eq('project_id', id)
+      .order('created_at', { ascending: true }),
+    // Current user's last read timestamp for this chat
+    supabase
+      .from('project_chat_reads')
+      .select('last_read_at')
+      .eq('project_id', id)
+      .eq('user_id', profile.id)
+      .maybeSingle(),
   ])
 
   if (livePhotosError) {
@@ -157,6 +174,40 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     })) as LivePhotoWithUploader[]
   })()
 
+  // Resolve chat message sender profiles
+  // sender_id is NULL for system messages — filter those out before the profile lookup.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawChat: any[] = rawChatMessages ?? []
+  const chatMessages: ProjectChatMessageWithSender[] = await (async () => {
+    if (rawChat.length === 0) return []
+    const senderIds = [...new Set(
+      rawChat
+        .map((m) => m.sender_id as string | null)
+        .filter((id): id is string => id !== null)
+    )]
+    const sendersById = new Map<string, { id: string; full_name: string; avatar_url: string | null }>()
+    if (senderIds.length > 0) {
+      const { data: senderProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', senderIds)
+      for (const p of senderProfiles ?? []) {
+        sendersById.set(p.id as string, p as { id: string; full_name: string; avatar_url: string | null })
+      }
+    }
+    return rawChat.map((msg) => ({
+      ...msg,
+      message_type: (msg.message_type as string) ?? 'user',
+      sender: msg.sender_id ? (sendersById.get(msg.sender_id as string) ?? null) : null,
+    })) as ProjectChatMessageWithSender[]
+  })()
+
+  // Unread chat count: messages after last_read_at, not sent by current user
+  const lastReadAt = (chatReadRow as { last_read_at: string } | null)?.last_read_at ?? null
+  const chatUnreadCount = chatMessages.filter(
+    (m) => m.sender_id !== profile.id && (!lastReadAt || m.created_at > lastReadAt)
+  ).length
+
   const mediaFiles = allMediaFiles.filter((f) => f.file_type.startsWith('image/') || f.file_type.startsWith('video/'))
   const projectFiles = allMediaFiles.filter((f) => !f.file_type.startsWith('image/') && !f.file_type.startsWith('video/'))
 
@@ -176,6 +227,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     (profile.role === 'project_manager' && isAssigned)
 
   const showPhotoLive = canUploadPhotoLive(profile.role) || profile.role === 'admin'
+  // Chat is visible to admin (always) and users assigned to this project
+  const showChat = profile.role === 'admin' || isAssigned
 
   const tabs = [
     { key: 'overview',   label: 'Overview' },
@@ -184,6 +237,9 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     { key: 'team',       label: assignments.length > 0 ? `Team (${assignments.length})` : 'Team' },
     ...(showPhotoLive
       ? [{ key: 'photo-live', label: livePhotos.length > 0 ? `Photo Live (${livePhotos.length})` : 'Photo Live' }]
+      : []),
+    ...(showChat
+      ? [{ key: 'chat', label: chatUnreadCount > 0 ? `Chat (${chatUnreadCount} new)` : 'Chat' }]
       : []),
     ...(canImportProjects(profile.role) ? [{ key: 'import-history', label: 'Import History' }] : []),
   ]
@@ -272,6 +328,20 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               canReview={canReviewLivePhoto(profile.role) && (profile.role === 'admin' || isAssigned)}
               currentUserId={profile.id}
               currentUserProfile={{
+                id:         profile.id,
+                full_name:  profile.full_name,
+                avatar_url: profile.avatar_url,
+              }}
+            />
+          )}
+
+          {tab === 'chat' && showChat && (
+            <ProjectChatTab
+              projectId={project.id}
+              projectCode={project.project_code}
+              projectName={project.name}
+              initialMessages={chatMessages}
+              currentUser={{
                 id:         profile.id,
                 full_name:  profile.full_name,
                 avatar_url: profile.avatar_url,

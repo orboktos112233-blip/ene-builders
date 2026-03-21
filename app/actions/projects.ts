@@ -8,6 +8,7 @@ import { requireAuth, requireRole } from '@/lib/auth/session'
 import { generateProjectCode } from '@/lib/projects/code'
 import type { ProjectStatus } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
+import { postSystemMessage } from '@/lib/project-chat/system-messages'
 import { sendNotification } from '@/lib/notifications/send'
 
 export interface ProjectActionState {
@@ -225,6 +226,14 @@ export async function updateProjectStatusAction(
     message:     `${profile.full_name} changed ${code} status to ${parsed.data.status.replace(/_/g, ' ')}`,
   })
 
+  // System message in project chat
+  const statusLabel = parsed.data.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  await postSystemMessage(
+    parsed.data.project_id,
+    `Project status changed to ${statusLabel}`,
+    'status_changed',
+  )
+
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   revalidatePath('/dashboard/projects')
   revalidatePath('/dashboard')
@@ -325,6 +334,14 @@ export async function updateProjectStatusInlineAction(data: {
     type:        'status_changed',
     message:     `${profile.full_name} changed ${code2} status to ${parsed.data.status.replace(/_/g, ' ')}`,
   })
+
+  // System message in project chat
+  const statusLabel2 = parsed.data.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  await postSystemMessage(
+    parsed.data.project_id,
+    `Project status changed to ${statusLabel2}`,
+    'status_changed',
+  )
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   revalidatePath('/dashboard/projects')

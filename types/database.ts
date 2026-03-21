@@ -240,6 +240,8 @@ export type NotificationType =
   | 'phase_updated'
   | 'item_added'
   | 'budget_updated'
+  | 'new_message'
+  | 'project_chat'
 
 export interface Notification {
   id: string
@@ -281,6 +283,64 @@ export interface ActivityLogWithProfile extends ActivityLog {
   profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
   projects: Pick<Project, 'id' | 'project_code' | 'name'> | null
 }
+
+// ── Messaging ─────────────────────────────────────────────────────────
+
+export interface Message {
+  id:              string
+  conversation_id: string
+  sender_id:       string
+  body:            string
+  created_at:      string
+  attachment_path: string | null
+  attachment_name: string | null
+  attachment_type: string | null
+  attachment_size: number | null
+}
+
+export interface MessageWithSender extends Message {
+  sender: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
+}
+
+export interface ConversationSummary {
+  id:          string
+  updatedAt:   string
+  otherUser:   Pick<Profile, 'id' | 'full_name' | 'avatar_url' | 'role'> | null
+  lastMessage: { body: string; created_at: string; sender_id: string } | null
+  unreadCount: number
+}
+
+export interface ProjectConversation {
+  projectId:   string
+  projectCode: string
+  projectName: string
+  lastMessage: { body: string; created_at: string; sender_id: string | null } | null
+  unreadCount: number
+}
+
+// ── Project Chat ──────────────────────────────────────────────
+
+export type ChatMessageType = 'user' | 'system'
+
+export interface ProjectChatMessage {
+  id:              string
+  project_id:      string
+  sender_id:       string | null   // null for system messages
+  body:            string
+  created_at:      string
+  message_type:    ChatMessageType
+  system_event:    string | null
+  attachment_path: string | null
+  attachment_name: string | null
+  attachment_type: string | null
+  attachment_size: number | null
+}
+
+export interface ProjectChatMessageWithSender extends ProjectChatMessage {
+  sender: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
+}
+
+// ── Live photos ───────────────────────────────────────────────────────
 
 export interface LivePhotoWithUploader extends MediaFile {
   profiles: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null

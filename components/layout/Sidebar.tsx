@@ -58,14 +58,28 @@ const AnalyticsIcon = () => (
   </svg>
 )
 
+const MessagesIcon = () => (
+  <svg className="w-[17px] h-[17px]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+  </svg>
+)
+
 // ── Shared nav content ────────────────────────────────────────
 
-function SidebarContent({ profile, onClose }: { profile: Profile; onClose: () => void }) {
+interface NavItem {
+  label: string
+  href:  string
+  icon:  React.ReactNode
+  badge?: number
+}
+
+function SidebarContent({ profile, unreadMessages, onClose }: { profile: Profile; unreadMessages?: number; onClose: () => void }) {
   const pathname = usePathname()
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { label: 'Dashboard',  href: '/dashboard',          icon: <HomeIcon /> },
     { label: 'Projects',   href: '/dashboard/projects', icon: <ProjectsIcon /> },
+    { label: 'Messages',   href: '/dashboard/messages', icon: <MessagesIcon />, badge: unreadMessages },
     ...(canImportProjects(profile.role) ? [{ label: 'Import',   href: '/dashboard/import',   icon: <ImportIcon /> }]   : []),
     ...(canViewActivity(profile.role)   ? [{ label: 'Activity', href: '/dashboard/activity', icon: <ActivityIcon /> }] : []),
     ...(canViewAnalytics(profile.role)  ? [{ label: 'Analytics', href: '/dashboard/analytics', icon: <AnalyticsIcon /> }] : []),
@@ -112,7 +126,12 @@ function SidebarContent({ profile, onClose }: { profile: Profile; onClose: () =>
               <span className={cn('shrink-0 transition-colors', isActive ? 'text-violet-400' : 'text-gray-600 group-hover:text-gray-400')}>
                 {item.icon}
               </span>
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.badge != null && item.badge > 0 && (
+                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-500 text-[10px] font-bold text-white">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </Link>
           )
         })}
@@ -145,7 +164,7 @@ function SidebarContent({ profile, onClose }: { profile: Profile; onClose: () =>
 
 // ── Exported Sidebar ──────────────────────────────────────────
 
-export function Sidebar({ profile }: { profile: Profile }) {
+export function Sidebar({ profile, unreadMessages }: { profile: Profile; unreadMessages?: number }) {
   const { open, close } = useSidebar()
 
   return (
@@ -171,13 +190,13 @@ export function Sidebar({ profile }: { profile: Profile }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
-          <SidebarContent profile={profile} onClose={close} />
+          <SidebarContent profile={profile} unreadMessages={unreadMessages} onClose={close} />
         </aside>
       </div>
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex lg:flex-col w-[220px] shrink-0 bg-[#0E0E10]">
-        <SidebarContent profile={profile} onClose={() => {}} />
+        <SidebarContent profile={profile} unreadMessages={unreadMessages} onClose={() => {}} />
       </aside>
     </>
   )

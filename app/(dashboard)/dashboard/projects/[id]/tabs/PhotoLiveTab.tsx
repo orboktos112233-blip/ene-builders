@@ -336,8 +336,11 @@ export function PhotoLiveTab({
   const [localPhotos, setLocalPhotos] = useState<LivePhotoWithUploader[]>([])
 
   // ── Action state ─────────────────────────────────────────────────────
-  const [deletingId,  setDeletingId]  = useState<string | null>(null)
-  const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [deletingId,    setDeletingId]    = useState<string | null>(null)
+  const [reviewingId,   setReviewingId]   = useState<string | null>(null)
+  const [reviewError,   setReviewError]   = useState<string | null>(null)
+  // Optimistic review overrides: fileId → { reviewed, reviewed_by, reviewed_at }
+  const [reviewOverrides, setReviewOverrides] = useState<Map<string, { reviewed: boolean; reviewed_by: string | null; reviewed_at: string | null }>>(new Map())
 
   // ── Filters ──────────────────────────────────────────────────────────
   const [filterUploader, setFilterUploader] = useState<string>('all')
@@ -361,8 +364,14 @@ export function PhotoLiveTab({
   const allPhotos = useMemo<LivePhotoWithUploader[]>(() => {
     const serverPaths = new Set(photos.map((p) => p.file_path))
     const unconfirmed = localPhotos.filter((p) => !serverPaths.has(p.file_path))
-    return [...unconfirmed, ...photos]
-  }, [localPhotos, photos])
+    const merged = [...unconfirmed, ...photos]
+    // Apply optimistic review overrides
+    if (reviewOverrides.size === 0) return merged
+    return merged.map((p) => {
+      const override = reviewOverrides.get(p.id)
+      return override ? { ...p, ...override } : p
+    })
+  }, [localPhotos, photos, reviewOverrides])
 
   const uploaderOptions = useMemo(() => {
     const seen = new Map<string, string>()
@@ -556,9 +565,41 @@ export function PhotoLiveTab({
 
   async function handleReview(file: LivePhotoWithUploader, reviewed: boolean) {
     setReviewingId(file.id)
-    await reviewLivePhotoAction({ file_id: file.id, project_id: projectId, reviewed })
+    setReviewError(null)
+
+    // Optimistic update — reflect change immediately in UI
+    const now = new Date().toISOString()
+    setReviewOverrides((prev) => {
+      const next = new Map(prev)
+      next.set(file.id, {
+        reviewed,
+        reviewed_by: reviewed ? currentUserId : null,
+        reviewed_at: reviewed ? now : null,
+      })
+      return next
+    })
+
+    const result = await reviewLivePhotoAction({ file_id: file.id, project_id: projectId, reviewed })
+
+    if (result.error) {
+      // Roll back optimistic update
+      setReviewOverrides((prev) => {
+        const next = new Map(prev)
+        next.delete(file.id)
+        return next
+      })
+      setReviewError(result.error)
+    } else {
+      // Remove override once server confirms — let fresh server data take over
+      router.refresh()
+      setReviewOverrides((prev) => {
+        const next = new Map(prev)
+        next.delete(file.id)
+        return next
+      })
+    }
+
     setReviewingId(null)
-    router.refresh()
   }
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -716,6 +757,21 @@ export function PhotoLiveTab({
             </button>
 
           </div>
+        </div>
+      )}
+
+      {/* Review error banner */}
+      {reviewError && (
+        <div className="rounded-xl bg-red-50 border border-red-100 px-3.5 py-2.5 flex items-start gap-2">
+          <svg className="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <p className="text-xs text-red-600 flex-1">{reviewError}</p>
+          <button onClick={() => setReviewError(null)} className="text-red-400 hover:text-red-600">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 

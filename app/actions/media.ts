@@ -6,6 +6,7 @@ import { requireAuth } from '@/lib/auth/session'
 import type { MediaCategory } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
 import { sendNotification } from '@/lib/notifications/send'
+import { postSystemMessage } from '@/lib/project-chat/system-messages'
 
 // ── Admin client — bypasses RLS for server-side writes ─────────────────
 // Safe: server actions already call requireAuth() before using this.
@@ -63,6 +64,13 @@ export async function saveMediaRecordAction(data: {
       type:        'photo_uploaded',
       message:     `${profile.full_name} uploaded new photos to ${code}`,
     })
+    // Post system message in project chat
+    const isVideo = data.file_type.startsWith('video/')
+    await postSystemMessage(
+      data.project_id,
+      `${profile.full_name} shared a ${isVideo ? 'video' : 'photo'} in Photo Live`,
+      'photo_uploaded',
+    )
   }
 
   await logActivity({
@@ -162,6 +170,8 @@ export async function deleteLivePhotoAction(data: {
 }
 
 // ── Mark / unmark a live photo as reviewed ─────────────────────────────
+// Uses admin client to bypass RLS — no UPDATE policy needed on media_files
+// for the session client. Role/assignment checks are enforced here in code.
 
 export async function reviewLivePhotoAction(data: {
   file_id: string
@@ -190,10 +200,15 @@ export async function reviewLivePhotoAction(data: {
     }
   }
 
-  const { error } = await supabase
+  // Use admin client — the session client is blocked by RLS (no UPDATE policy
+  // exists for the authenticated role; the admin client bypasses RLS entirely).
+  const admin = await adminClient()
+  const db    = admin ?? supabase
+
+  const { error } = await db
     .from('media_files')
     .update({
-      reviewed: data.reviewed,
+      reviewed:    data.reviewed,
       reviewed_by: data.reviewed ? profile.id : null,
       reviewed_at: data.reviewed ? new Date().toISOString() : null,
     })

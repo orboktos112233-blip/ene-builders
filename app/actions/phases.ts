@@ -7,6 +7,8 @@ import { requireAuth } from '@/lib/auth/session'
 import type { PhaseName, PhaseStatus } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
 import { sendNotification } from '@/lib/notifications/send'
+import { postSystemMessage } from '@/lib/project-chat/system-messages'
+import { PHASE_LABELS } from '@/types/database'
 
 export interface PhaseActionState {
   error?: string
@@ -98,6 +100,16 @@ export async function updatePhaseAction(data: {
     type:        'phase_updated',
     message:     `${profile.full_name} updated the ${parsed.data.phase.replace(/_/g, ' ')} phase on ${phaseCode}`,
   })
+
+  // Post system message to project chat
+  const statusLabel = parsed.data.status === 'not_started' ? 'Not Started'
+    : parsed.data.status === 'in_progress' ? 'In Progress'
+    : 'Completed'
+  await postSystemMessage(
+    parsed.data.project_id,
+    `${profile.full_name} updated ${PHASE_LABELS[parsed.data.phase]} → ${statusLabel}`,
+    'phase_updated',
+  )
 
   revalidatePath(`/dashboard/projects/${parsed.data.project_id}`)
   return { success: true }
