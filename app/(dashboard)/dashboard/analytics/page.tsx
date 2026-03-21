@@ -2,15 +2,15 @@ import { requireRole } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 import { Topbar } from '@/components/layout/Topbar'
 import { getItemTotal } from '@/types/database'
-import { ReportsClient, type ReportRow, type FilterOption } from './ReportsClient'
-import type { Project, ProjectItem, PhaseName } from '@/types/database'
+import { AnalyticsClient, type AnalyticsRow, type FilterOption } from './AnalyticsClient'
+import type { Project, ProjectItem } from '@/types/database'
 import { PHASE_ORDER } from '@/types/database'
 
 export const metadata = {
-  title: 'Reports – ENE Builders',
+  title: 'Analytics – ENE Builders',
 }
 
-export default async function ReportsPage() {
+export default async function AnalyticsPage() {
   await requireRole(['admin', 'office'])
 
   const supabase = await createClient()
@@ -18,14 +18,12 @@ export default async function ReportsPage() {
   const [
     { data: projectsData },
     { data: itemsData },
-    { data: sectionsData },
     { data: assignmentsData },
     { data: profilesData },
     { data: phasesData },
   ] = await Promise.all([
     supabase.from('projects').select('*').order('created_at', { ascending: false }),
     supabase.from('project_items').select('project_id, total_price, quantity, unit_price'),
-    supabase.from('project_sections').select('id, project_id'),
     supabase.from('project_assignments').select('project_id, user_id, assignment_role'),
     supabase.from('profiles').select('id, full_name, role').order('full_name'),
     supabase.from('construction_phases').select('project_id, phase_name, status').eq('status', 'in_progress'),
@@ -33,24 +31,14 @@ export default async function ReportsPage() {
 
   const projects = (projectsData as Project[] | null) ?? []
 
-  // ── Cost per project ──────────────────────────────────────────
+  // ── Cost per project ───────────────────────────────────────────
   const costByProject: Record<string, number> = {}
   for (const item of (itemsData ?? []) as (Pick<ProjectItem, 'total_price' | 'quantity' | 'unit_price'> & { project_id: string })[]) {
     const val = getItemTotal(item) ?? 0
     costByProject[item.project_id] = (costByProject[item.project_id] ?? 0) + val
   }
 
-  // ── Section / item counts ─────────────────────────────────────
-  const sectionsByProject: Record<string, number> = {}
-  for (const s of (sectionsData ?? []) as { id: string; project_id: string }[]) {
-    sectionsByProject[s.project_id] = (sectionsByProject[s.project_id] ?? 0) + 1
-  }
-  const itemsByProject: Record<string, number> = {}
-  for (const item of (itemsData ?? []) as { project_id: string }[]) {
-    itemsByProject[item.project_id] = (itemsByProject[item.project_id] ?? 0) + 1
-  }
-
-  // ── PM / worker IDs per project ───────────────────────────────
+  // ── PM / worker IDs per project ────────────────────────────────
   const pmsByProject:     Record<string, string[]> = {}
   const workersByProject: Record<string, string[]> = {}
   for (const a of (assignmentsData ?? []) as { project_id: string; user_id: string; assignment_role: string }[]) {
@@ -63,15 +51,15 @@ export default async function ReportsPage() {
     }
   }
 
-  // ── Active phases per project ─────────────────────────────────
+  // ── Active phases per project ──────────────────────────────────
   const activePhasesByProject: Record<string, string[]> = {}
-  for (const ph of (phasesData ?? []) as { project_id: string; phase_name: string; status: string }[]) {
+  for (const ph of (phasesData ?? []) as { project_id: string; phase_name: string }[]) {
     if (!activePhasesByProject[ph.project_id]) activePhasesByProject[ph.project_id] = []
     activePhasesByProject[ph.project_id].push(ph.phase_name)
   }
 
-  // ── Build rows ────────────────────────────────────────────────
-  const rows: ReportRow[] = projects.map((p) => ({
+  // ── Build rows ─────────────────────────────────────────────────
+  const rows: AnalyticsRow[] = projects.map((p) => ({
     id:                 p.id,
     project_code:       p.project_code,
     name:               p.name,
@@ -82,36 +70,34 @@ export default async function ReportsPage() {
     budget_total:       p.budget_total ?? null,
     cost:               costByProject[p.id] ?? 0,
     client_name:        p.client_name ?? null,
-    sections:           sectionsByProject[p.id] ?? 0,
-    items:              itemsByProject[p.id] ?? 0,
     pm_ids:             pmsByProject[p.id] ?? [],
     worker_ids:         workersByProject[p.id] ?? [],
     active_phases:      activePhasesByProject[p.id] ?? [],
   }))
 
-  // ── Dropdown options ──────────────────────────────────────────
+  // ── Dropdown options ───────────────────────────────────────────
   const allProfiles = (profilesData ?? []) as { id: string; full_name: string; role: string }[]
   const pmOptions:     FilterOption[] = allProfiles.filter((u) => u.role === 'project_manager' || u.role === 'admin').map((u) => ({ id: u.id, full_name: u.full_name }))
   const workerOptions: FilterOption[] = allProfiles.filter((u) => u.role === 'worker').map((u) => ({ id: u.id, full_name: u.full_name }))
-  const phaseOptions: string[] = PHASE_ORDER as unknown as string[]
+  const phaseOptions:  string[]       = PHASE_ORDER as unknown as string[]
 
   return (
     <>
-      <Topbar title="Reports" />
+      <Topbar title="Analytics" />
       <main className="flex-1 overflow-y-auto bg-[#F4F2EF] px-4 py-8 lg:px-10 lg:py-10 print:bg-white print:p-6">
         <div className="max-w-7xl mx-auto space-y-8">
 
           {/* Header */}
           <div className="flex items-start justify-between print:hidden">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Reports</h1>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Analytics</h1>
               <p className="text-sm text-gray-400 mt-1">
-                Analytics and financials across {projects.length} project{projects.length !== 1 ? 's' : ''}.
+                Visual business overview across {projects.length} project{projects.length !== 1 ? 's' : ''}.
               </p>
             </div>
           </div>
 
-          <ReportsClient
+          <AnalyticsClient
             rows={rows}
             pmOptions={pmOptions}
             workerOptions={workerOptions}

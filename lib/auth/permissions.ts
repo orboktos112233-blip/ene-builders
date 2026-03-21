@@ -89,3 +89,8 @@ export function canViewActivity(role: Role): boolean {
 export function canViewReports(role: Role): boolean {
   return role === 'admin' || role === 'office'
 }
+
+// Analytics: visible to admin and office
+export function canViewAnalytics(role: Role): boolean {
+  return role === 'admin' || role === 'office'
+}

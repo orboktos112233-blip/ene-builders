@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types/database'
-import { canManageUsers, canImportProjects, canViewActivity, canViewReports } from '@/lib/auth/permissions'
+import { canManageUsers, canImportProjects, canViewActivity, canViewReports, canViewAnalytics } from '@/lib/auth/permissions'
 import { Avatar } from '@/components/ui/Avatar'
 import { useSidebar } from './SidebarContext'
 
@@ -52,6 +52,12 @@ const ReportsIcon = () => (
   </svg>
 )
 
+const AnalyticsIcon = () => (
+  <svg className="w-[17px] h-[17px]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+  </svg>
+)
+
 // ── Shared nav content ────────────────────────────────────────
 
 function SidebarContent({ profile, onClose }: { profile: Profile; onClose: () => void }) {
@@ -62,7 +68,8 @@ function SidebarContent({ profile, onClose }: { profile: Profile; onClose: () =>
     { label: 'Projects',   href: '/dashboard/projects', icon: <ProjectsIcon /> },
     ...(canImportProjects(profile.role) ? [{ label: 'Import',   href: '/dashboard/import',   icon: <ImportIcon /> }]   : []),
     ...(canViewActivity(profile.role)   ? [{ label: 'Activity', href: '/dashboard/activity', icon: <ActivityIcon /> }] : []),
-    ...(canViewReports(profile.role)    ? [{ label: 'Reports',  href: '/dashboard/reports',  icon: <ReportsIcon /> }]  : []),
+    ...(canViewAnalytics(profile.role)  ? [{ label: 'Analytics', href: '/dashboard/analytics', icon: <AnalyticsIcon /> }] : []),
+    ...(canViewReports(profile.role)    ? [{ label: 'Reports',   href: '/dashboard/reports',  icon: <ReportsIcon /> }]  : []),
     ...(canManageUsers(profile.role)    ? [{ label: 'Users',    href: '/dashboard/users',    icon: <UsersIcon /> }]    : []),
   ]
 

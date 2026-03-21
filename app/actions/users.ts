@@ -48,6 +48,7 @@ export async function inviteUserAction(
   )
 
   const { error } = await adminClient.auth.admin.inviteUserByEmail(parsed.data.email, {
+    redirectTo: 'https://ene-builders-system.vercel.app/auth/callback',
     data: {
       full_name: parsed.data.full_name,
       role: parsed.data.role,
