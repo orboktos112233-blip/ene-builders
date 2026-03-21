@@ -65,7 +65,7 @@ export function SectionsTab({
       {/* ── Financial summary ── */}
       {sections.length > 0 && hasPricing && (
         budget != null ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FinancialCard
               label="Budget / Revenue"
               value={budget}
@@ -85,14 +85,14 @@ export function SectionsTab({
             />
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-2xl bg-gray-900 px-8 py-7 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-gray-900 px-5 py-5 sm:px-8 sm:py-7 text-white shadow-lg">
             <div className="absolute -right-6 -top-6 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
             <div className="absolute -right-2 bottom-0 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
             <div className="relative">
               <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1">
                 Total Project Cost
               </p>
-              <p className="text-5xl font-black tracking-tight tabular-nums mt-1">
+              <p className="text-3xl sm:text-5xl font-black tracking-tight tabular-nums mt-1">
                 {formatCurrency(grandTotal)}
               </p>
               <p className="flex items-center gap-3 mt-4 text-gray-400 text-xs font-medium">
@@ -113,16 +113,16 @@ export function SectionsTab({
 
       {/* Item count stats (no pricing yet) */}
       {sections.length > 0 && !hasPricing && (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Sections',    value: sections.length },
             { label: 'Items',       value: totalItems },
             { label: 'In Progress', value: inProgress },
             { label: 'Completed',   value: completed },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white border border-gray-200 rounded-xl px-4 py-4 text-center shadow-sm">
-              <p className="text-2xl font-black text-gray-900 tabular-nums">{stat.value}</p>
-              <p className="text-xs text-gray-400 mt-1 font-medium">{stat.label}</p>
+            <div key={stat.label} className="bg-white border border-gray-200 rounded-xl px-3 py-3.5 text-center shadow-sm">
+              <p className="text-xl sm:text-2xl font-black text-gray-900 tabular-nums">{stat.value}</p>
+              <p className="text-[11px] sm:text-xs text-gray-400 mt-1 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -236,13 +236,13 @@ function FinancialCard({
 
   return (
     <div className={cn(
-      'rounded-2xl px-6 py-5 shadow-sm border',
+      'rounded-2xl px-4 sm:px-6 py-4 sm:py-5 shadow-sm border',
       isPositive ? 'bg-emerald-50 border-emerald-200' :
       isNegative ? 'bg-red-50 border-red-200' :
       'bg-white border-gray-200'
     )}>
       <p className={cn(
-        'text-[11px] font-bold uppercase tracking-widest mb-2',
+        'text-[10px] font-bold uppercase tracking-widest mb-1.5',
         isPositive ? 'text-emerald-600' :
         isNegative ? 'text-red-500' :
         'text-gray-400'
@@ -250,7 +250,7 @@ function FinancialCard({
         {label}
       </p>
       <p className={cn(
-        'text-3xl font-black tabular-nums tracking-tight',
+        'text-xl sm:text-2xl font-black tabular-nums tracking-tight break-all',
         isPositive ? 'text-emerald-700' :
         isNegative ? 'text-red-600' :
         valueClass ?? 'text-gray-900'
@@ -259,7 +259,7 @@ function FinancialCard({
       </p>
       {sub && (
         <p className={cn(
-          'text-xs mt-2',
+          'text-xs mt-1.5',
           isPositive ? 'text-emerald-600' :
           isNegative ? 'text-red-400' :
           'text-gray-400'

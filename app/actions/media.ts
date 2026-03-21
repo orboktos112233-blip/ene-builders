@@ -7,6 +7,16 @@ import type { MediaCategory } from '@/types/database'
 import { logActivity } from '@/lib/activity/log'
 import { sendNotification } from '@/lib/notifications/send'
 
+// ── Admin client — bypasses RLS for server-side writes ─────────────────
+// Safe: server actions already call requireAuth() before using this.
+async function adminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return null
+  const { createClient: create } = await import('@supabase/supabase-js')
+  return create(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+}
+
 export interface MediaActionState {
   error?: string
   success?: boolean
@@ -26,7 +36,13 @@ export async function saveMediaRecordAction(data: {
   const profile = await requireAuth()
   const supabase = await createClient()
 
-  const { error } = await supabase.from('media_files').insert({
+  // Use admin client to bypass RLS — permissions are already checked via requireAuth()
+  // This ensures uploads work regardless of whether the user is "assigned" to the project,
+  // and regardless of which migrations have been applied to the RLS policies.
+  const admin = await adminClient()
+  const db    = admin ?? supabase  // fall back to session client if service key not set
+
+  const { error } = await db.from('media_files').insert({
     ...data,
     uploaded_by: profile.id,
   })

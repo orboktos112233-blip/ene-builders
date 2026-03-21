@@ -74,8 +74,8 @@ export async function inviteUserAction(
     if (msg.includes('already been invited') || msg.includes('already registered') || msg.includes('already exists')) {
       return { error: 'A user with this email has already been invited or registered.' }
     }
-    if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('once every')) {
-      return { error: 'Rate limit reached. Supabase allows a limited number of emails per hour on the free tier. Wait a few minutes and try again.' }
+    if (error?.message?.includes('rate limit') || msg.includes('too many') || msg.includes('once every')) {
+      return { error: 'Too many invites. Please wait a few minutes.' }
     }
     if (msg.includes('smtp') || msg.includes('send') && msg.includes('email')) {
       return { error: 'Email sending failed. If you are on Supabase free tier, SMTP may not be configured. Go to Supabase Dashboard → Authentication → SMTP Settings.' }

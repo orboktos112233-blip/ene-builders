@@ -29,6 +29,12 @@ export async function createClient() {
           }
         },
       },
+      // Disable Next.js Data Cache for all Supabase queries.
+      // Without this, Next.js may serve stale cached responses to different
+      // users after another user's request has been server-rendered.
+      global: {
+        fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }),
+      },
     }
   )
 }

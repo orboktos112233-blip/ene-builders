@@ -37,101 +37,150 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
       {/* Section header */}
-      <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 border-b border-gray-200">
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
-          aria-label={open ? 'Collapse section' : 'Expand section'}
-        >
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
-            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
-          </svg>
-        </button>
+      <div className="px-4 sm:px-5 py-3.5 sm:py-4 bg-gray-50 border-b border-gray-200">
 
-        {/* Section name / rename form */}
+        {/* Rename form — full-width single row */}
         {renaming ? (
           <form
             action={async (fd) => {
               await renameAction(fd)
               setRenaming(false)
             }}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2"
           >
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="text-gray-400 shrink-0"
+              aria-label={open ? 'Collapse section' : 'Expand section'}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+                fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
             <input type="hidden" name="section_id" value={section.id} />
             <input type="hidden" name="project_id" value={section.project_id} />
             <Input
               name="name"
               defaultValue={section.name}
               autoFocus
-              className="text-sm py-1.5 h-8"
+              className="text-sm py-1.5 h-8 flex-1 min-w-0"
               required
             />
             {renameState.error && (
-              <span className="text-xs text-red-500">{renameState.error}</span>
+              <span className="text-xs text-red-500 shrink-0">{renameState.error}</span>
             )}
             <Button type="submit" size="sm" loading={renamePending}>Save</Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setRenaming(false)}>Cancel</Button>
           </form>
         ) : (
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <span className="text-sm font-bold text-gray-900 truncate">{section.name}</span>
-            <span className="text-[11px] text-gray-400 shrink-0 font-semibold bg-gray-100 px-2 py-0.5 rounded-full">
-              {section.project_items.length}
-            </span>
-            {hasPricing && (
-              <span className="ml-auto shrink-0 text-sm font-bold text-gray-800 tabular-nums">
-                {formatCurrency(sectionTotal)}
-              </span>
-            )}
-          </div>
-        )}
+          <>
+            {/* Row 1: toggle + name + count + total */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+                aria-label={open ? 'Collapse section' : 'Expand section'}
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+                  fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="text-sm font-bold text-gray-900 truncate">{section.name}</span>
+                <span className="text-[11px] text-gray-400 shrink-0 font-semibold bg-gray-100 px-2 py-0.5 rounded-full">
+                  {section.project_items.length}
+                </span>
+              </div>
+              {hasPricing && (
+                <span className="shrink-0 text-sm font-bold text-gray-800 tabular-nums">
+                  {formatCurrency(sectionTotal)}
+                </span>
+              )}
+              {/* Desktop-only action buttons (inline with header row) */}
+              {(canManage || canDelete) && (
+                <div className="hidden sm:flex items-center gap-1 shrink-0">
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
+                      className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
+                    >
+                      + Add Item
+                    </button>
+                  )}
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => setRenaming(true)}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      Rename
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
-        {/* Actions */}
-        {!renaming && (
-          <div className="flex items-center gap-1 shrink-0">
-            {canManage && (
-              <button
-                type="button"
-                onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
-                className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
-              >
-                + Add Item
-              </button>
+            {/* Row 2: mobile-only action buttons (below name row) */}
+            {(canManage || canDelete) && (
+              <div className="flex sm:hidden items-center gap-1.5 mt-2.5 pl-7">
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
+                    className="text-xs font-semibold text-violet-600 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100 transition-colors"
+                  >
+                    + Add Item
+                  </button>
+                )}
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => setRenaming(true)}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-100 transition-colors"
+                  >
+                    Rename
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-xs text-red-400 px-2.5 py-1.5 rounded-lg bg-red-50 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             )}
-            {canManage && (
-              <button
-                type="button"
-                onClick={() => setRenaming(true)}
-                className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Rename
-              </button>
-            )}
-            {canDelete && (
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-              >
-                Delete
-              </button>
-            )}
-          </div>
+          </>
         )}
       </div>
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (
-        <div className="px-5 py-3.5 bg-red-50 border-b border-red-100 flex items-center justify-between gap-4">
-          <p className="text-sm text-red-700">
+        <div className="px-4 sm:px-5 py-3.5 bg-red-50 border-b border-red-100 flex flex-col sm:flex-row sm:items-center gap-3">
+          <p className="text-sm text-red-700 flex-1">
             Delete <strong>{section.name}</strong>? All {section.project_items.length} items will be permanently removed.
           </p>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 self-end sm:self-auto">
             <Button
               type="button"
               variant="ghost"
@@ -192,7 +241,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
 
           {/* Section footer total */}
           {section.project_items.length > 0 && hasPricing && (
-            <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50/80 flex justify-end items-center gap-3">
+            <div className="px-4 sm:px-5 py-3.5 border-t border-gray-100 bg-gray-50/80 flex justify-end items-center gap-3">
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                 Section Total
               </span>

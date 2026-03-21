@@ -66,7 +66,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     { data: importRunData },
     { data: mediaFilesData },
     { data: phasesData },
-    { data: livePhotosData },
+    // Live photos: plain select — no embedded profile joins.
+    // PostgREST can fail to resolve FK hints when two columns on the same table
+    // both reference profiles (uploaded_by + reviewed_by). We resolve profiles
+    // in a separate query below, which is always reliable.
+    { data: rawLivePhotosData, error: livePhotosError },
   ] = await Promise.all([
     supabase.from('projects').select('*').eq('id', id).single(),
     supabase.from('project_assignments').select('*, profiles(*)').eq('project_id', id),
@@ -100,11 +104,15 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       .order('updated_at', { ascending: false }),
     supabase
       .from('media_files')
-      .select('*, profiles!uploaded_by(id, full_name, avatar_url), reviewer_profile:profiles!reviewed_by(id, full_name)')
+      .select('*')
       .eq('project_id', id)
       .eq('category', 'live_photo')
       .order('created_at', { ascending: false }),
   ])
+
+  if (livePhotosError) {
+    console.error('[Photo Live] feed query failed:', livePhotosError.message)
+  }
 
   const project = projectData as Project | null
   if (!project) notFound()
@@ -115,7 +123,39 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const importRun = importRunData as (ProjectImportRun & { profiles: Profile }) | null
   const allMediaFiles = (mediaFilesData ?? []) as MediaFile[]
   const phases = (phasesData ?? []) as ConstructionPhase[]
-  const livePhotos = (livePhotosData ?? []) as LivePhotoWithUploader[]
+
+  // Resolve uploader and reviewer profiles with a single follow-up query.
+  // This avoids the PostgREST schema-cache issue with multiple FKs to profiles.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawLivePhotos: any[] = rawLivePhotosData ?? []
+
+  const livePhotos: LivePhotoWithUploader[] = await (async () => {
+    if (rawLivePhotos.length === 0) return []
+
+    const profileIds = [...new Set([
+      ...rawLivePhotos.map((p) => p.uploaded_by as string),
+      ...rawLivePhotos.map((p) => p.reviewed_by as string | null).filter(Boolean),
+    ])]
+
+    const profilesById = new Map<string, Pick<Profile, 'id' | 'full_name' | 'avatar_url'>>()
+    if (profileIds.length > 0) {
+      const { data: profData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', profileIds)
+      for (const p of profData ?? []) {
+        profilesById.set(p.id, p as Pick<Profile, 'id' | 'full_name' | 'avatar_url'>)
+      }
+    }
+
+    return rawLivePhotos.map((photo) => ({
+      ...photo,
+      profiles:         profilesById.get(photo.uploaded_by as string) ?? null,
+      reviewer_profile: photo.reviewed_by
+        ? (profilesById.get(photo.reviewed_by as string) ?? null)
+        : null,
+    })) as LivePhotoWithUploader[]
+  })()
 
   const mediaFiles = allMediaFiles.filter((f) => f.file_type.startsWith('image/') || f.file_type.startsWith('video/'))
   const projectFiles = allMediaFiles.filter((f) => !f.file_type.startsWith('image/') && !f.file_type.startsWith('video/'))
@@ -231,6 +271,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               canDeleteAny={canDeleteAnyLivePhoto(profile.role)}
               canReview={canReviewLivePhoto(profile.role) && (profile.role === 'admin' || isAssigned)}
               currentUserId={profile.id}
+              currentUserProfile={{
+                id:         profile.id,
+                full_name:  profile.full_name,
+                avatar_url: profile.avatar_url,
+              }}
             />
           )}
 

@@ -41,7 +41,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
           <input type="hidden" name="project_id" value={project.id} />
 
           {/* Edit header */}
-          <div className="px-7 pt-6 pb-5 border-b border-gray-100">
+          <div className="px-4 sm:px-7 pt-6 pb-5 border-b border-gray-100">
             <p className="text-xs font-semibold text-violet-600 uppercase tracking-widest mb-4">
               Editing Project Details
             </p>
@@ -112,7 +112,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
           </div>
 
           {/* Client section */}
-          <div className="px-7 py-5 border-b border-gray-100">
+          <div className="px-4 sm:px-7 py-5 border-b border-gray-100">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Client</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
@@ -137,7 +137,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
           </div>
 
           {/* Actions */}
-          <div className="px-7 py-4 flex justify-end gap-2.5">
+          <div className="px-4 sm:px-7 py-4 flex justify-end gap-2.5">
             <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
               Cancel
             </Button>
@@ -153,7 +153,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-7 pt-7 pb-6 border-b border-gray-100">
+      <div className="px-4 sm:px-7 pt-6 sm:pt-7 pb-6 border-b border-gray-100">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 mb-3">
@@ -190,10 +190,10 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
       {/* Client */}
       {(project.client_name || project.client_email || project.client_phone) && (
         <div className="border-t border-gray-100">
-          <div className="px-7 py-4 border-b border-gray-100 bg-gray-50/60">
+          <div className="px-4 sm:px-7 py-4 border-b border-gray-100 bg-gray-50/60">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Client</p>
           </div>
-          <div className="px-7 py-5">
+          <div className="px-4 sm:px-7 py-5">
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {project.client_name && <ClientField label="Name" value={project.client_name} />}
               {project.client_email && (
@@ -217,7 +217,7 @@ export function ProjectDetailsCard({ project, canEdit }: ProjectDetailsCardProps
 
 function InfoCell({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className="px-7 py-5">
+    <div className="px-4 sm:px-7 py-4 sm:py-5">
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
       <p className={bold ? 'text-base font-black text-gray-900' : 'text-sm font-medium text-gray-800'}>
         {value}
