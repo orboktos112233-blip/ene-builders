@@ -35,84 +35,62 @@ function CallbackContent() {
   const router       = useRouter()
   const supabase     = createClient()
 
-  type Status = 'verifying' | 'set-password' | 'saving' | 'success' | 'error'
+  type Status = 'verifying' | 'success' | 'error'
 
-  const [status,   setStatus]   = useState<Status>('verifying')
-  const [errMsg,   setErrMsg]   = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm,  setConfirm]  = useState('')
-  const [showPw,   setShowPw]   = useState(false)
+  const [status, setStatus] = useState<Status>('verifying')
+  const [errMsg, setErrMsg] = useState('')
 
-  // ── Token verification on mount ─────────────────────────────────
   useEffect(() => {
+    const code       = searchParams.get('code')
     const token_hash = searchParams.get('token_hash')
     const type       = searchParams.get('type')
-    const code       = searchParams.get('code')
+
+    console.log('[auth/callback] Params received:', { code, token_hash, type })
 
     async function verify() {
-      // PKCE / OAuth code flow → exchange and go to dashboard
+      // ── 1. Try code (PKCE flow) ─────────────────────────────────
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error) { setErrMsg('Link has expired or is invalid.'); setStatus('error'); return }
-        router.replace('/dashboard')
-        return
-      }
+        console.log('[auth/callback] Trying exchangeCodeForSession...')
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('[auth/callback] exchangeCodeForSession result:', { session: data?.session?.user?.email, error: error?.message })
 
-      // Token hash flow (invite / magic link / recovery)
-      if (token_hash && type) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: type as 'invite' | 'magiclink' | 'recovery' | 'email' | 'signup' | 'email_change',
-        })
-        if (error) {
-          setErrMsg('This invite link has expired or has already been used.')
-          setStatus('error')
+        if (!error) {
+          console.log('[auth/callback] Code exchange succeeded → /dashboard')
+          router.replace('/dashboard')
           return
         }
-        // For invites & recovery, let the user set a password
-        setStatus('set-password')
-        return
+
+        console.log('[auth/callback] Code exchange failed:', error.message)
       }
 
-      // No token params — check for an existing session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.replace('/dashboard')
-      } else {
-        setErrMsg('Invalid link. Please ask your admin to send a new invitation.')
-        setStatus('error')
+      // ── 2. Try token_hash (invite / magic link) ─────────────────
+      if (token_hash && type) {
+        console.log('[auth/callback] Trying verifyOtp with type:', type)
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: 'invite',
+        })
+        console.log('[auth/callback] verifyOtp result:', { session: data?.session?.user?.email, error: error?.message })
+
+        if (!error) {
+          console.log('[auth/callback] verifyOtp succeeded → /dashboard')
+          setStatus('success')
+          router.replace('/dashboard')
+          return
+        }
+
+        console.log('[auth/callback] verifyOtp failed:', error.message)
       }
+
+      // ── 3. Both failed (or no params at all) ────────────────────
+      console.log('[auth/callback] All flows failed. code:', code, 'token_hash:', token_hash, 'type:', type)
+      setErrMsg('This invite link has expired or has already been used.')
+      setStatus('error')
     }
 
     verify()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // ── Password submit ─────────────────────────────────────────────
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setErrMsg('')
-
-    if (password.length < 8) {
-      setErrMsg('Password must be at least 8 characters.')
-      return
-    }
-    if (password !== confirm) {
-      setErrMsg('Passwords do not match.')
-      return
-    }
-
-    setStatus('saving')
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) {
-      setErrMsg(error.message)
-      setStatus('set-password')
-      return
-    }
-
-    setStatus('success')
-    setTimeout(() => router.replace('/dashboard'), 1800)
-  }
 
   // ── Verifying ───────────────────────────────────────────────────
   if (status === 'verifying') {
@@ -124,28 +102,7 @@ function CallbackContent() {
     )
   }
 
-  // ── Error ───────────────────────────────────────────────────────
-  if (status === 'error') {
-    return (
-      <div className="text-center py-6">
-        <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-        </div>
-        <p className="text-sm font-semibold text-gray-800 mb-1">Link expired</p>
-        <p className="text-sm text-gray-500 mb-6">{errMsg}</p>
-        <a
-          href="/login"
-          className="text-sm font-semibold text-violet-600 hover:text-violet-800 transition-colors"
-        >
-          Back to login
-        </a>
-      </div>
-    )
-  }
-
-  // ── Success ─────────────────────────────────────────────────────
+  // ── Success (shown briefly before redirect) ─────────────────────
   if (status === 'success') {
     return (
       <div className="text-center py-6">
@@ -154,99 +111,33 @@ function CallbackContent() {
             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
           </svg>
         </div>
-        <p className="text-sm font-semibold text-gray-800 mb-1">Password set!</p>
+        <p className="text-sm font-semibold text-gray-800 mb-1">Verified!</p>
         <p className="text-sm text-gray-400">Taking you to your dashboard…</p>
       </div>
     )
   }
 
-  // ── Set password form (set-password | saving) ───────────────────
+  // ── Error ───────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="text-center mb-1">
-        <p className="text-[15px] font-semibold text-gray-800">Set your password</p>
-        <p className="text-sm text-gray-400 mt-1">Choose a password to complete your account setup.</p>
+    <div className="text-center py-6">
+      <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
       </div>
-
-      {errMsg && (
-        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
-          <p className="text-sm text-red-600">{errMsg}</p>
-        </div>
-      )}
-
-      {/* Password */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-gray-600" htmlFor="password">
-          New password
-        </label>
-        <div className="relative">
-          <input
-            id="password"
-            type={showPw ? 'text' : 'password'}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            required
-            autoComplete="new-password"
-            className="w-full px-4 py-2.5 pr-10 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPw(v => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-            tabIndex={-1}
-          >
-            {showPw ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Confirm */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-gray-600" htmlFor="confirm">
-          Confirm password
-        </label>
-        <input
-          id="confirm"
-          type={showPw ? 'text' : 'password'}
-          value={confirm}
-          onChange={e => setConfirm(e.target.value)}
-          placeholder="Repeat your password"
-          required
-          autoComplete="new-password"
-          className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
-        />
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={status === 'saving'}
-        className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+      <p className="text-sm font-semibold text-gray-800 mb-1">Link expired</p>
+      <p className="text-sm text-gray-500 mb-6">{errMsg}</p>
+      <a
+        href="/login"
+        className="text-sm font-semibold text-violet-600 hover:text-violet-800 transition-colors"
       >
-        {status === 'saving' ? (
-          <>
-            <Spinner />
-            Saving…
-          </>
-        ) : (
-          'Set password & continue'
-        )}
-      </button>
-    </form>
+        Back to login
+      </a>
+    </div>
   )
 }
 
-// ── Page shell (Suspense boundary required for useSearchParams) ──────
+// ── Page shell ───────────────────────────────────────────────────
 
 export default function CallbackPage() {
   return (
