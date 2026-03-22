@@ -174,14 +174,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   return (
     <>
       <Topbar title="Dashboard" />
-      <main className="flex-1 overflow-y-auto bg-[#F4F2EF] px-4 py-8 lg:px-10 lg:py-10">
+      <main className="flex-1 overflow-y-auto bg-[#F5F4F0] px-4 py-8 lg:px-10 lg:py-10">
         <div className="max-w-6xl mx-auto space-y-8">
 
           {/* ── Header ── */}
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
               Good {getGreeting()},{' '}
-              <span className="text-violet-600">{profile.full_name.split(' ')[0]}</span>
+              <span className="text-[#1C3FAA]">{profile.full_name.split(' ')[0]}</span>
             </h1>
             <p className="text-sm text-gray-400 mt-1">Here&apos;s what&apos;s happening across your projects.</p>
           </div>
@@ -191,7 +191,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             <DashboardFilters showUserFilter={canManageUsers(profile.role)} users={users} />
           </Suspense>
           {hasFilters && (
-            <p className="text-xs text-violet-600 font-semibold -mt-4">Showing filtered results</p>
+            <p className="text-xs text-[#6B7280] font-medium -mt-4">Showing filtered results</p>
           )}
 
           {/* ── KPI cards (6) ── */}
@@ -200,7 +200,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               label="Active Projects"
               value={activeProjects}
               icon={<IconActive />}
-              color="violet"
             />
             <KpiCard
               label="Total Budget"
@@ -237,7 +236,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           {hasAlerts && (
             <div>
               <SectionLabel>Issues</SectionLabel>
-              <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] divide-y divide-black/[0.04] overflow-hidden">
+              <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] divide-y divide-[#F5F4F0] overflow-hidden">
                 {delayedProjects.map((p) => {
                   const daysLate = Math.floor(
                     (today.getTime() - new Date(p.estimated_end_date!).getTime()) / 86_400_000
@@ -297,7 +296,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {hasFinancials && chartProjects.length > 0 && (
                 <div>
                   <SectionLabel>Budget vs Cost</SectionLabel>
-                  <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+                  <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
                     <div className="px-6 py-5 space-y-4">
                       {chartProjects.map((p) => {
                         const cost    = costByProject[p.id] ?? 0
@@ -316,7 +315,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                             <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className="text-[10px] font-mono text-gray-400 shrink-0">{p.project_code}</span>
-                                <span className="text-sm font-semibold text-gray-800 group-hover:text-violet-700 transition-colors truncate">
+                                <span className="text-sm font-semibold text-gray-800 group-hover:text-[#1C3FAA] transition-colors truncate">
                                   {p.name}
                                 </span>
                               </div>
@@ -340,7 +339,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                               <div
                                 className={cn(
                                   'absolute left-0 top-0 h-full rounded-full transition-all',
-                                  overrun ? 'bg-red-500' : ratio > 0.8 ? 'bg-amber-400' : 'bg-violet-500'
+                                  overrun ? 'bg-[#DC2626]' : ratio > 0.8 ? 'bg-[#D97706]' : 'bg-[#1C3FAA]'
                                 )}
                                 style={{ width: `${costPct}%` }}
                               />
@@ -351,9 +350,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     </div>
 
                     {/* Legend */}
-                    <div className="px-6 py-3 border-t border-black/[0.05] flex items-center gap-5">
+                    <div className="px-6 py-3 border-t border-[#E3E1DC] flex items-center gap-5">
                       <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-1.5 rounded-full bg-violet-500 inline-block" />
+                        <span className="w-3 h-1.5 rounded-full bg-[#1C3FAA] inline-block" />
                         <span className="text-[11px] text-gray-400 font-medium">Cost</span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -377,16 +376,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   </SectionLabel>
                   <Link
                     href="/dashboard/projects"
-                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors"
+                    className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors"
                   >
                     View all →
                   </Link>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+                <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
                   {recentProjects.length === 0 ? (
                     <div className="py-16 text-center">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-[#F4F4F5] flex items-center justify-center mx-auto mb-4">
                         <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                         </svg>
@@ -395,13 +394,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                         {hasFilters ? 'No projects match.' : 'No projects yet.'}
                       </p>
                       {!hasFilters && (
-                        <Link href="/dashboard/projects/new" className="mt-2 inline-block text-sm font-semibold text-violet-600 hover:text-violet-800">
+                        <Link href="/dashboard/projects/new" className="mt-2 inline-block text-sm font-semibold text-[#1C3FAA] hover:text-[#162F82]">
                           Create your first project →
                         </Link>
                       )}
                     </div>
                   ) : (
-                    <div className="divide-y divide-black/[0.04]">
+                    <div className="divide-y divide-[#F5F4F0]">
                       {recentProjects.map((project) => {
                         const cost = costByProject[project.id]
                         const isDelayed =
@@ -413,11 +412,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                           <Link
                             key={project.id}
                             href={`/dashboard/projects/${project.id}`}
-                            className="flex items-center justify-between px-5 lg:px-6 py-4 hover:bg-violet-50/30 transition-colors duration-100 group"
+                            className="flex items-center justify-between px-5 lg:px-6 py-4 hover:bg-[#FAFAF9] transition-colors duration-100 group"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors truncate">
+                                <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1C3FAA] transition-colors truncate">
                                   {project.name}
                                 </p>
                                 {isDelayed && (
@@ -463,19 +462,19 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   <SectionLabel className="mb-0">Recent Activity</SectionLabel>
                   <Link
                     href="/dashboard/activity"
-                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors"
+                    className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors"
                   >
                     View all →
                   </Link>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+                <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
                   {recentActivity.length === 0 ? (
                     <div className="py-12 text-center">
                       <p className="text-sm text-gray-400">No recent activity</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-black/[0.04]">
+                    <div className="divide-y divide-[#F5F4F0]">
                       {recentActivity.map((log) => {
                         const config = ACTIVITY_CONFIG[log.action] ?? ACTIVITY_CONFIG._default
                         return (
@@ -492,7 +491,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                               {log.projects && (
                                 <Link
                                   href={`/dashboard/projects/${log.projects.id}`}
-                                  className="text-[11px] text-violet-600 hover:text-violet-800 font-medium mt-0.5 inline-block transition-colors"
+                                  className="text-[11px] text-[#1C3FAA] hover:text-[#162F82] font-medium mt-0.5 inline-block transition-colors"
                                 >
                                   {log.projects.project_code}
                                 </Link>
@@ -511,8 +510,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {upcoming.length > 0 && (
                 <div>
                   <SectionLabel>Upcoming Deadlines</SectionLabel>
-                  <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-                    <div className="divide-y divide-black/[0.04]">
+                  <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+                    <div className="divide-y divide-[#F5F4F0]">
                       {upcoming.map((p) => {
                         const daysLeft = Math.ceil(
                           (new Date(p.estimated_end_date!).getTime() - today.getTime()) / 86_400_000
@@ -522,21 +521,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                           <Link
                             key={p.id}
                             href={`/dashboard/projects/${p.id}`}
-                            className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/60 transition-colors group"
+                            className="flex items-center gap-3 px-4 py-3.5 hover:bg-[#FAFAF9] transition-colors group"
                           >
                             <div className={cn(
                               'shrink-0 w-10 h-10 rounded-xl flex flex-col items-center justify-center',
-                              urgent ? 'bg-red-50' : 'bg-violet-50'
+                              urgent ? 'bg-[#FEF2F2]' : 'bg-[#EEF2FF]'
                             )}>
-                              <span className={cn('text-[10px] font-bold leading-none', urgent ? 'text-red-500' : 'text-violet-500')}>
+                              <span className={cn('text-[10px] font-bold leading-none', urgent ? 'text-[#DC2626]' : 'text-[#1C3FAA]')}>
                                 {daysLeft}d
                               </span>
-                              <span className={cn('text-[9px] mt-0.5 font-medium', urgent ? 'text-red-400' : 'text-violet-400')}>
+                              <span className={cn('text-[9px] mt-0.5 font-medium', urgent ? 'text-[#DC2626]/70' : 'text-[#1C3FAA]/60')}>
                                 left
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors truncate">
+                              <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1C3FAA] transition-colors truncate">
                                 {p.name}
                               </p>
                               <p className="text-[11px] text-gray-400 mt-0.5">
@@ -556,8 +555,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {phasesInProgress > 0 && (
                 <div>
                   <SectionLabel>Active Phases</SectionLabel>
-                  <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-                    <div className="divide-y divide-black/[0.04]">
+                  <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+                    <div className="divide-y divide-[#F5F4F0]">
                       {allPhases
                         .filter((ph) => ph.status === 'in_progress')
                         .slice(0, 6)
@@ -568,16 +567,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                             <Link
                               key={`${ph.project_id}-${ph.phase_name}-${i}`}
                               href={`/dashboard/projects/${project.id}`}
-                              className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/60 transition-colors group"
+                              className="flex items-center gap-3 px-4 py-3.5 hover:bg-[#FAFAF9] transition-colors group"
                             >
-                              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                              <span className="w-2 h-2 rounded-full bg-[#D97706] shrink-0" />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors truncate">
+                                <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1C3FAA] transition-colors truncate">
                                   {PHASE_LABELS[ph.phase_name]}
                                 </p>
                                 <p className="text-[11px] text-gray-400 mt-0.5 truncate">{project.name}</p>
                               </div>
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-full shrink-0">
+                              <span className="text-[10px] font-semibold text-[#92400E] bg-[#FFFBEB] border border-[#FDE68A] px-2 py-1 rounded-md shrink-0">
                                 In progress
                               </span>
                             </Link>
@@ -620,7 +619,7 @@ function timeAgo(iso: string): string {
 
 function SectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={cn('text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-3', className)}>
+    <p className={cn('text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[0.08em] mb-3', className)}>
       {children}
     </p>
   )
@@ -629,19 +628,19 @@ function SectionLabel({ children, className }: { children: React.ReactNode; clas
 // ── Activity action config ──────────────────────────────────────
 
 const ACTIVITY_CONFIG: Record<string, { bg: string; icon: string }> = {
-  project_created:  { bg: 'bg-emerald-100 text-emerald-600', icon: '✦'  },
-  project_updated:  { bg: 'bg-blue-100 text-blue-600',      icon: '✎'  },
-  project_deleted:  { bg: 'bg-red-100 text-red-500',        icon: '✕'  },
-  status_changed:   { bg: 'bg-amber-100 text-amber-600',    icon: '↻'  },
-  phase_updated:    { bg: 'bg-violet-100 text-violet-600',  icon: '▸'  },
-  media_uploaded:   { bg: 'bg-violet-100 text-violet-600',  icon: '⬆'  },
-  media_deleted:    { bg: 'bg-rose-100 text-rose-500',      icon: '✕'  },
-  photo_reviewed:   { bg: 'bg-teal-100 text-teal-600',      icon: '✓'  },
-  item_added:       { bg: 'bg-emerald-100 text-emerald-600',icon: '+'  },
-  member_added:     { bg: 'bg-cyan-100 text-cyan-600',      icon: '+'  },
-  member_removed:   { bg: 'bg-orange-100 text-orange-500',  icon: '−'  },
-  import_completed: { bg: 'bg-slate-100 text-slate-500',    icon: '↓'  },
-  _default:         { bg: 'bg-gray-100 text-gray-500',      icon: '·'  },
+  project_created:  { bg: 'bg-[#F0FDF4] text-[#15803D]', icon: '✦'  },
+  project_updated:  { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '✎'  },
+  project_deleted:  { bg: 'bg-[#FEF2F2] text-[#991B1B]', icon: '✕'  },
+  status_changed:   { bg: 'bg-[#FFFBEB] text-[#92400E]', icon: '↻'  },
+  phase_updated:    { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '▸'  },
+  media_uploaded:   { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '⬆'  },
+  media_deleted:    { bg: 'bg-[#FEF2F2] text-[#991B1B]', icon: '✕'  },
+  photo_reviewed:   { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '✓'  },
+  item_added:       { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '+'  },
+  member_added:     { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '+'  },
+  member_removed:   { bg: 'bg-[#FEF2F2] text-[#991B1B]', icon: '−'  },
+  import_completed: { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '↓'  },
+  _default:         { bg: 'bg-[#F4F4F5] text-[#52525B]', icon: '·'  },
 }
 
 // ── KPI card ───────────────────────────────────────────────────
@@ -655,33 +654,33 @@ function KpiCard({
   label: string
   value: number | string
   icon: React.ReactNode
-  color?: 'violet' | 'amber' | 'emerald' | 'red' | 'sky'
+  color?: 'blue' | 'amber' | 'emerald' | 'red' | 'sky'
 }) {
   const iconBg =
-    color === 'violet'  ? 'bg-violet-100 text-violet-600'   :
-    color === 'amber'   ? 'bg-amber-100 text-amber-600'     :
-    color === 'emerald' ? 'bg-emerald-100 text-emerald-600' :
-    color === 'red'     ? 'bg-red-100 text-red-500'         :
-    color === 'sky'     ? 'bg-sky-100 text-sky-600'         :
-    'bg-gray-100 text-gray-500'
+    color === 'blue'    ? 'bg-[#EEF2FF] text-[#1C3FAA]'  :
+    color === 'amber'   ? 'bg-[#FFFBEB] text-[#92400E]'  :
+    color === 'emerald' ? 'bg-[#F0FDF4] text-[#15803D]'  :
+    color === 'red'     ? 'bg-[#FEF2F2] text-[#991B1B]'  :
+    color === 'sky'     ? 'bg-[#EFF6FF] text-[#1D4ED8]'  :
+    'bg-[#F4F4F5] text-[#52525B]'
 
   const valueColor =
-    color === 'violet'  ? 'text-violet-600'  :
-    color === 'amber'   ? 'text-amber-600'   :
-    color === 'emerald' ? 'text-emerald-600' :
-    color === 'red'     ? 'text-red-500'     :
-    color === 'sky'     ? 'text-sky-600'     :
-    'text-gray-900'
+    color === 'blue'    ? 'text-[#1C3FAA]'  :
+    color === 'amber'   ? 'text-[#92400E]'  :
+    color === 'emerald' ? 'text-[#15803D]'  :
+    color === 'red'     ? 'text-[#991B1B]'  :
+    color === 'sky'     ? 'text-[#1D4ED8]'  :
+    'text-[#111018]'
 
   return (
-    <div className="bg-white rounded-2xl border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] px-4 py-5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+    <div className="bg-white rounded-xl border border-[#E3E1DC] shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-4 py-5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all duration-200">
       <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center mb-3', iconBg)}>
         {icon}
       </div>
-      <p className={cn('text-2xl font-black tracking-tight tabular-nums leading-none', valueColor)}>
+      <p className={cn('text-2xl font-bold tracking-tight tabular-nums leading-none', valueColor)}>
         {value}
       </p>
-      <p className="text-[11px] font-medium text-gray-400 mt-1.5 leading-tight">{label}</p>
+      <p className="text-[11px] font-medium text-[#9CA3AF] mt-1.5 leading-tight">{label}</p>
     </div>
   )
 }

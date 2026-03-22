@@ -113,7 +113,7 @@ function FilterSelect({
       onChange={(e) => onChange(e.target.value)}
       className={cn(
         'py-2 pl-3 pr-7 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700',
-        'focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all',
+        'focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all',
         'appearance-none cursor-pointer',
         className
       )}
@@ -326,7 +326,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Project, client..."
-                className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
               />
               {query && (
                 <button type="button" onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -351,7 +351,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+              className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
             />
           </div>
 
@@ -362,7 +362,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+              className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
             />
           </div>
 
@@ -402,12 +402,12 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-auto self-end">
             {hasFilters && (
-              <button type="button" onClick={clearAll} className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors px-2 py-2">
+              <button type="button" onClick={clearAll} className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors px-2 py-2">
                 Clear all
               </button>
             )}
             <span className="text-xs text-gray-400 py-2">{filtered.length} project{filtered.length !== 1 ? 's' : ''}</span>
-            <button type="button" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-800 bg-violet-50 hover:bg-violet-100 border border-violet-200/80 px-3 py-2 rounded-lg transition-colors">
+            <button type="button" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] bg-[#EEF2FF] hover:bg-[#E0E7FF] border border-[#C7D2FE]/80 px-3 py-2 rounded-lg transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
               CSV
             </button>
@@ -423,7 +423,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Projects',    value: filtered.length,                       formatted: filtered.length.toString(),            color: 'text-gray-900',    bg: 'bg-gray-100',    icon: '🏗' },
-          { label: 'Total Budget',value: totalBudget,                           formatted: formatCurrencyCompact(totalBudget),    color: 'text-gray-900',    bg: 'bg-violet-100',  icon: '💰' },
+          { label: 'Total Budget',value: totalBudget,                           formatted: formatCurrencyCompact(totalBudget),    color: 'text-gray-900',    bg: 'bg-[#EEF2FF]',  icon: '💰' },
           { label: 'Total Cost',  value: totalCost,                             formatted: formatCurrencyCompact(totalCost),      color: 'text-amber-600',   bg: 'bg-amber-100',   icon: '📊' },
           {
             label: totalProfit >= 0 ? 'Net Profit' : 'Net Loss',
@@ -460,7 +460,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
             </svg>
           </div>
           <p className="text-sm font-semibold text-gray-500">No data matches your filters</p>
-          <button type="button" onClick={clearAll} className="mt-3 text-xs text-violet-600 hover:text-violet-800 font-semibold transition-colors">
+          <button type="button" onClick={clearAll} className="mt-3 text-xs text-[#1C3FAA] hover:text-[#162F82] font-semibold transition-colors">
             Clear filters
           </button>
         </div>
@@ -626,7 +626,7 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
                           {ins.type === 'danger' ? '!' : ins.type === 'warning' ? '⚠' : ins.type === 'success' ? '✓' : 'i'}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700 transition-colors truncate">
+                          <p className="text-sm font-semibold text-gray-900 group-hover:text-[#1C3FAA] transition-colors truncate">
                             {ins.title}
                           </p>
                           <p className={cn(
@@ -679,14 +679,14 @@ export function ReportsClient({ rows, pmOptions, workerOptions, phaseOptions }: 
                       const profitPos = profit != null && profit >= 0
                       const isDelayed = r.status !== 'completed' && r.estimated_end_date && new Date(r.estimated_end_date) < today
                       return (
-                        <tr key={r.id} className="hover:bg-violet-50/20 transition-colors group">
+                        <tr key={r.id} className="hover:bg-[#FAFAF9] transition-colors group">
                           <td className="py-4 pl-6 pr-3">
                             <Link href={`/dashboard/projects/${r.id}`} className="group/link">
                               <div className="flex items-center gap-2 mb-0.5">
                                 <span className="text-[10px] font-mono font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{r.project_code}</span>
                                 {isDelayed && <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200/80 px-1.5 py-0.5 rounded-full">delayed</span>}
                               </div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover/link:text-violet-700 transition-colors">{r.name}</p>
+                              <p className="text-sm font-semibold text-gray-900 group-hover/link:text-[#1C3FAA] transition-colors">{r.name}</p>
                             </Link>
                           </td>
                           <td className="py-4 px-3"><span className="text-sm text-gray-500">{r.client_name ?? <span className="text-gray-300">—</span>}</span></td>

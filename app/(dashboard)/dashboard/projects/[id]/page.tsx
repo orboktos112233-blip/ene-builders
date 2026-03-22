@@ -268,8 +268,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
                 className={cn(
                   'px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all duration-150 whitespace-nowrap',
                   tab === key
-                    ? 'border-violet-600 text-violet-600'
-                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#1C3FAA] text-[#1C3FAA]'
+                    : 'border-transparent text-[#9CA3AF] hover:text-[#374151] hover:border-[#E3E1DC]'
                 )}
               >
                 {label}

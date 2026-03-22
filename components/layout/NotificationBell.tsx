@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import {
   getNotificationsAction,
   getUnreadCountAction,
   markAllReadAction,
 } from '@/app/actions/notifications'
+import { useNotificationsRealtime } from '@/lib/realtime/hooks'
 import type { Notification, NotificationType } from '@/types/database'
 
 // ── Icon per notification type ──────────────────────────────────
@@ -54,15 +55,8 @@ function TypeIcon({ type }: { type: NotificationType }) {
   }
 }
 
-const TYPE_COLORS: Record<NotificationType, string> = {
-  photo_uploaded: 'bg-violet-100 text-violet-600',
-  status_changed: 'bg-amber-100 text-amber-600',
-  phase_updated:  'bg-blue-100 text-blue-600',
-  item_added:     'bg-emerald-100 text-emerald-600',
-  budget_updated: 'bg-orange-100 text-orange-600',
-  new_message:    'bg-sky-100 text-sky-600',
-  project_chat:   'bg-violet-100 text-violet-600',
-}
+// All icon containers use a single calm neutral style — no color noise
+const TYPE_COLOR = 'bg-[#F4F4F5] text-[#52525B]'
 
 // ── Relative time ───────────────────────────────────────────────
 
@@ -86,11 +80,39 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loaded,        setLoaded]        = useState(false)
   const [, startTransition]               = useTransition()
+  const [userId,        setUserId]        = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const btnRef   = useRef<HTMLButtonElement>(null)
 
+  // ── Get current user ID ───────────────────────────────────────
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser()
+      if (user) setUserId(user.id)
+    }
+    getUser()
+  }, [])
+
+  // ── Realtime: Subscribe to notifications ──────────────────────
+
+  const handleNewNotification = useCallback((notif: Notification) => {
+    setNotifications((prev) => [notif, ...prev])
+  }, [])
+
+  const handleUnreadCountChange = useCallback((newCount: number | ((prev: number) => number)) => {
+    setCount(newCount)
+  }, [])
+
+  useNotificationsRealtime(
+    userId ?? '',
+    handleNewNotification,
+    handleUnreadCountChange,
+    !!userId
+  )
+
   // ── Fetch unread count on mount + poll every 60s ──────────────
   useEffect(() => {
+    if (!userId) return
     let mounted = true
     async function refresh() {
       const n = await getUnreadCountAction()
@@ -99,7 +121,7 @@ export function NotificationBell() {
     refresh()
     const id = setInterval(refresh, 60_000)
     return () => { mounted = false; clearInterval(id) }
-  }, [])
+  }, [userId])
 
   // ── Close on outside click ────────────────────────────────────
   useEffect(() => {
@@ -148,10 +170,10 @@ export function NotificationBell() {
         type="button"
         onClick={handleClick}
         className={cn(
-          'relative p-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40',
+          'relative p-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C3FAA]/30',
           open
-            ? 'bg-gray-100 text-gray-700'
-            : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100/80'
+            ? 'bg-[#EDEBE6] text-[#374151]'
+            : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#EDEBE6]'
         )}
         aria-label="Notifications"
       >
@@ -159,7 +181,7 @@ export function NotificationBell() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
         </svg>
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-violet-600 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-[#1C3FAA] text-white text-[9px] font-bold rounded-full px-1 leading-none">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -169,14 +191,14 @@ export function NotificationBell() {
       {open && (
         <div
           ref={panelRef}
-          className="absolute right-0 top-full mt-2 w-[360px] max-h-[480px] flex flex-col bg-white rounded-2xl border border-black/[0.07] shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden z-50"
+          className="absolute right-0 top-full mt-2 w-[360px] max-h-[480px] flex flex-col bg-white rounded-xl border border-[#E3E1DC] shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] overflow-hidden z-50"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-black/[0.05] shrink-0">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#E3E1DC] shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-gray-900">Notifications</span>
+              <span className="text-sm font-semibold text-[#111018]">Notifications</span>
               {count > 0 && (
-                <span className="text-[10px] font-bold bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold bg-[#EEF2FF] text-[#1C3FAA] px-1.5 py-0.5 rounded-md">
                   {count} new
                 </span>
               )}
@@ -191,7 +213,7 @@ export function NotificationBell() {
                     setCount(0)
                   })
                 }}
-                className="text-xs text-violet-600 hover:text-violet-800 font-semibold transition-colors"
+                className="text-xs text-[#1C3FAA] hover:text-[#162F82] font-semibold transition-colors"
               >
                 Mark all read
               </button>
@@ -202,47 +224,47 @@ export function NotificationBell() {
           <div className="overflow-y-auto flex-1">
             {!loaded ? (
               <div className="flex items-center justify-center py-12">
-                <svg className="w-5 h-5 animate-spin text-gray-300" fill="none" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 animate-spin text-[#E3E1DC]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 text-center px-6">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-xl bg-[#F5F4F0] flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-[#9CA3AF]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-500">No notifications yet</p>
-                <p className="text-xs text-gray-400 mt-1">Activity on your projects will appear here.</p>
+                <p className="text-sm font-medium text-[#6B7280]">No notifications yet</p>
+                <p className="text-xs text-[#9CA3AF] mt-1">Activity on your projects will appear here.</p>
               </div>
             ) : (
-              <div className="divide-y divide-black/[0.04]">
+              <div className="divide-y divide-[#F5F4F0]">
                 {notifications.map((n) => (
                   <div
                     key={n.id}
                     className={cn(
                       'flex items-start gap-3 px-4 py-3.5 transition-colors',
-                      !n.is_read ? 'bg-violet-50/40' : 'bg-white hover:bg-gray-50/60'
+                      !n.is_read ? 'bg-[#F5F8FF]' : 'bg-white hover:bg-[#FAFAF9]'
                     )}
                   >
                     {/* Type icon */}
-                    <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5', TYPE_COLORS[n.type])}>
+                    <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5', TYPE_COLOR)}>
                       <TypeIcon type={n.type} />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={cn('text-sm leading-snug', !n.is_read ? 'font-medium text-gray-900' : 'font-normal text-gray-700')}>
+                      <p className={cn('text-sm leading-snug', !n.is_read ? 'font-medium text-[#111018]' : 'font-normal text-[#374151]')}>
                         {n.message}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
+                      <p className="text-[11px] text-[#9CA3AF] mt-1">{timeAgo(n.created_at)}</p>
                     </div>
 
                     {/* Unread dot */}
                     {!n.is_read && (
-                      <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0 mt-1.5" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1C3FAA] shrink-0 mt-2" />
                     )}
                   </div>
                 ))}
@@ -252,8 +274,8 @@ export function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-4 py-3 border-t border-black/[0.05] shrink-0 text-center">
-              <p className="text-xs text-gray-400">Showing last {notifications.length} notifications</p>
+            <div className="px-4 py-3 border-t border-[#E3E1DC] shrink-0 text-center">
+              <p className="text-xs text-[#9CA3AF]">Showing last {notifications.length} notifications</p>
             </div>
           )}
         </div>

@@ -95,7 +95,7 @@ export function InlineStatusSelect({ projectId, status, canEdit }: InlineStatusS
           defaultValue={current}
           onChange={handleChange}
           onBlur={handleBlur}
-          className="text-xs font-semibold border border-violet-300 rounded-full px-2.5 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 cursor-pointer text-gray-700 shadow-sm"
+          className="text-xs font-semibold border border-[#1C3FAA]/25 rounded-md px-2.5 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 cursor-pointer text-[#374151]"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -110,7 +110,7 @@ export function InlineStatusSelect({ projectId, status, canEdit }: InlineStatusS
     <button
       type="button"
       onClick={(e) => { e.preventDefault(); setEditing(true) }}
-      className="group inline-flex items-center gap-1 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+      className="group inline-flex items-center gap-1 rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C3FAA]/30"
       title="Click to change status"
     >
       <StatusBadge status={current} />

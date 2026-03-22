@@ -111,7 +111,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
                     <button
                       type="button"
                       onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
-                      className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
+                      className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] px-3 py-1.5 rounded-lg hover:bg-[#F0F4FF] border border-[#DBEAFE] hover:border-[#C7D2FE] transition-colors"
                     >
                       + Add Item
                     </button>
@@ -145,7 +145,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
                   <button
                     type="button"
                     onClick={() => { setShowAddItem((v) => !v); setOpen(true) }}
-                    className="text-xs font-semibold text-violet-600 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100 transition-colors"
+                    className="text-xs font-semibold text-[#1C3FAA] px-3 py-1.5 rounded-lg bg-[#EEF2FF] border border-[#DBEAFE] transition-colors"
                   >
                     + Add Item
                   </button>
@@ -224,7 +224,7 @@ export function SectionCard({ section, canManage, canEdit, canDelete }: SectionC
                 <button
                   type="button"
                   onClick={() => setShowAddItem(true)}
-                  className="mt-4 text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 border border-violet-100 hover:border-violet-200 transition-colors"
+                  className="mt-4 text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] px-3 py-1.5 rounded-lg hover:bg-[#F0F4FF] border border-[#DBEAFE] hover:border-[#C7D2FE] transition-colors"
                 >
                   + Add First Item
                 </button>

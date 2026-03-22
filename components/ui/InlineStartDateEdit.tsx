@@ -103,7 +103,7 @@ export function InlineStartDateEdit({ projectId, startDate, canEdit }: InlineSta
           onChange={(e) => setDraft(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="text-xs border border-violet-300 rounded-lg px-1.5 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 w-[120px] text-gray-700 shadow-sm"
+          className="text-xs border border-[#1C3FAA]/30 rounded-lg px-1.5 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/30 w-[120px] text-gray-700 shadow-xs"
         />
       </span>
     )
@@ -114,14 +114,14 @@ export function InlineStartDateEdit({ projectId, startDate, canEdit }: InlineSta
     <button
       type="button"
       onClick={(e) => { e.preventDefault(); setEditing(true) }}
-      className="group flex items-center gap-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 w-full justify-end"
+      className="group flex items-center gap-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C3FAA] w-full justify-end"
       title="Click to edit start date"
     >
-      <span className="text-xs text-gray-600 font-medium group-hover:text-violet-600 transition-colors">
+      <span className="text-xs text-gray-600 font-medium group-hover:text-[#1C3FAA] transition-colors">
         {formatDateCompact(current)}
       </span>
       <svg
-        className="w-3 h-3 text-gray-300 group-hover:text-violet-400 transition-colors shrink-0"
+        className="w-3 h-3 text-gray-300 group-hover:text-[#1C3FAA] transition-colors shrink-0"
         fill="none"
         stroke="currentColor"
         strokeWidth={2}

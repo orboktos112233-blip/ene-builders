@@ -68,7 +68,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SELECT_CLS = [
   'py-2 pl-3 pr-8 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-700',
-  'focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all',
+  'focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all',
   'appearance-none cursor-pointer',
 ].join(' ')
 
@@ -351,7 +351,7 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search projects…"
-              className="pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all w-full"
+              className="pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all w-full"
             />
             {query && (
               <button type="button" onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -370,13 +370,13 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
           {/* From date */}
           <input
             type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-            className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+            className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
           />
 
           {/* To date */}
           <input
             type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-            className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+            className="py-2 px-3 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
           />
 
           {/* PM filter */}
@@ -413,7 +413,7 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors"
+                  className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors"
                 >
                   Clear
                 </button>
@@ -441,8 +441,8 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
             value: filtered.length.toString(),
             sub: `${rows.length} total`,
             iconEl: icons.projects,
-            iconBg: 'bg-violet-100',
-            iconColor: 'text-violet-600',
+            iconBg: 'bg-[#EEF2FF]',
+            iconColor: 'text-[#1C3FAA]',
             valueColor: 'text-gray-900',
           },
           {
@@ -459,8 +459,8 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
             value: formatCurrencyCompact(kpis.totalBudget),
             sub: `${kpis.budgetedCount} projects`,
             iconEl: icons.budget,
-            iconBg: 'bg-blue-100',
-            iconColor: 'text-blue-600',
+            iconBg: 'bg-[#EEF2FF]',
+            iconColor: 'text-[#1C3FAA]',
             valueColor: 'text-gray-900',
           },
           {
@@ -660,13 +660,13 @@ export function AnalyticsClient({ rows, pmOptions, workerOptions, phaseOptions }
           </div>
 
           {/* Highest cost */}
-          <div className="rounded-xl bg-blue-50 border border-blue-100/80 p-4">
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide mb-2">Highest Cost</p>
+          <div className="rounded-xl bg-[#EEF2FF] border border-[#C7D2FE]/80 p-4">
+            <p className="text-[10px] font-bold text-[#1C3FAA] uppercase tracking-wide mb-2">Highest Cost</p>
             {insights.highCost ? (
               <>
                 <p className="text-sm font-bold text-gray-900 truncate leading-snug">{insights.highCost.name}</p>
-                <p className="text-[11px] text-blue-600/70 mt-0.5 font-mono">{insights.highCost.project_code}</p>
-                <p className="text-lg font-bold text-blue-600 mt-2 tabular-nums">
+                <p className="text-[11px] text-[#1C3FAA]/70 mt-0.5 font-mono">{insights.highCost.project_code}</p>
+                <p className="text-lg font-bold text-[#1C3FAA] mt-2 tabular-nums">
                   {formatCurrencyCompact(insights.highCost.cost)}
                 </p>
               </>

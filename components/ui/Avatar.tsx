@@ -1,11 +1,19 @@
 import { cn } from '@/lib/utils'
 
-// Deterministic color bucket from the person's name — same name always same color.
+// Deterministic calm color bucket — same name always same color.
 function nameColor(name: string): string {
+  // All muted, professional tones — no bright or playful colors
   const palette = [
-    'bg-indigo-500', 'bg-violet-500', 'bg-blue-500',  'bg-cyan-600',
-    'bg-teal-500',   'bg-emerald-600','bg-orange-500', 'bg-rose-500',
-    'bg-pink-500',   'bg-amber-600',
+    'bg-[#334155]', // slate-700
+    'bg-[#1D4ED8]', // blue-700
+    'bg-[#0369A1]', // sky-700
+    'bg-[#0F766E]', // teal-700
+    'bg-[#15803D]', // green-700
+    'bg-[#6D28D9]', // violet-700 — only deep/muted
+    'bg-[#1E40AF]', // blue-800
+    'bg-[#374151]', // gray-700
+    'bg-[#075985]', // sky-800
+    'bg-[#166534]', // green-800
   ]
   let h = 0
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
@@ -71,7 +79,7 @@ interface AvatarStackProps {
 }
 
 export function AvatarStack({ members, max = 3 }: AvatarStackProps) {
-  if (members.length === 0) return <span className="text-xs text-gray-400">—</span>
+  if (members.length === 0) return <span className="text-xs text-[#9CA3AF]">—</span>
 
   const shown = members.slice(0, max)
   const extra = members.length - shown.length
@@ -90,7 +98,7 @@ export function AvatarStack({ members, max = 3 }: AvatarStackProps) {
         ))}
       </div>
       {extra > 0 && (
-        <span className="text-[11px] font-medium text-gray-400">+{extra}</span>
+        <span className="text-[11px] font-medium text-[#9CA3AF]">+{extra}</span>
       )}
     </div>
   )

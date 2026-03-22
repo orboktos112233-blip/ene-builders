@@ -68,11 +68,11 @@ const ArrowDownTrayIcon = () => (
 
 const ACTION_CONFIG: Record<ActivityAction, ActionConfig> = {
   project_created:  { label: 'Project Created',   icon: <FolderPlusIcon />,   iconBg: 'bg-emerald-100',  iconColor: 'text-emerald-600' },
-  project_updated:  { label: 'Project Updated',   icon: <PencilIcon />,        iconBg: 'bg-blue-100',     iconColor: 'text-blue-600'    },
+  project_updated:  { label: 'Project Updated',   icon: <PencilIcon />,        iconBg: 'bg-[#EEF2FF]',    iconColor: 'text-[#1C3FAA]'  },
   project_deleted:  { label: 'Project Deleted',   icon: <TrashIcon />,         iconBg: 'bg-red-100',      iconColor: 'text-red-500'     },
   status_changed:   { label: 'Status Changed',    icon: <ArrowPathIcon />,     iconBg: 'bg-amber-100',    iconColor: 'text-amber-600'   },
-  phase_updated:    { label: 'Phase Updated',     icon: <ListBulletIcon />,    iconBg: 'bg-violet-100',   iconColor: 'text-violet-600'  },
-  media_uploaded:   { label: 'File Uploaded',     icon: <PhotoIcon />,         iconBg: 'bg-violet-100',   iconColor: 'text-violet-600'  },
+  phase_updated:    { label: 'Phase Updated',     icon: <ListBulletIcon />,    iconBg: 'bg-[#EEF2FF]',  iconColor: 'text-[#1C3FAA]' },
+  media_uploaded:   { label: 'File Uploaded',     icon: <PhotoIcon />,         iconBg: 'bg-[#EEF2FF]',  iconColor: 'text-[#1C3FAA]' },
   media_deleted:    { label: 'File Deleted',      icon: <TrashIcon />,         iconBg: 'bg-rose-100',     iconColor: 'text-rose-500'    },
   photo_reviewed:   { label: 'Photo Reviewed',    icon: <CheckBadgeIcon />,    iconBg: 'bg-teal-100',     iconColor: 'text-teal-600'    },
   item_added:       { label: 'Item Added',         icon: <FolderPlusIcon />,    iconBg: 'bg-emerald-100',  iconColor: 'text-emerald-600' },
@@ -176,7 +176,7 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
               placeholder="Search activity…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 bg-gray-50/60 placeholder:text-gray-400"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] bg-gray-50/60 placeholder:text-gray-400"
             />
           </div>
 
@@ -185,7 +185,7 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
             <select
               value={filterAction}
               onChange={(e) => setFilterAction(e.target.value)}
-              className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400"
+              className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA]"
             >
               <option value="">All actions</option>
               {(Object.entries(ACTION_LABELS) as [ActivityAction, string][]).map(([key, label]) => (
@@ -198,7 +198,7 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
               <select
                 value={filterUser}
                 onChange={(e) => setFilterUser(e.target.value)}
-                className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400"
+                className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA]"
               >
                 <option value="">All users</option>
                 {allUsers.map((u) => (
@@ -212,7 +212,7 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
               <select
                 value={filterProject}
                 onChange={(e) => setFilterProject(e.target.value)}
-                className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400"
+                className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50/60 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA]"
               >
                 <option value="">All projects</option>
                 {allProjects.map((p) => (
@@ -240,7 +240,7 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
             {hasFilters ? 'No activity matches your filters.' : 'No activity yet.'}
           </p>
           {hasFilters && (
-            <button onClick={clearFilters} className="mt-2 text-xs text-violet-600 hover:text-violet-700 font-medium">
+            <button onClick={clearFilters} className="mt-2 text-xs text-[#1C3FAA] hover:text-[#162F82] font-medium">
               Clear filters
             </button>
           )}
@@ -291,11 +291,11 @@ export function ActivityFeed({ logs, allUsers, allProjects }: ActivityFeedProps)
                                   {log.profiles && <span className="text-gray-300 text-xs">·</span>}
                                   <Link
                                     href={`/dashboard/projects/${log.project_id}`}
-                                    className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 font-medium transition-colors"
+                                    className="inline-flex items-center gap-1 text-xs text-[#1C3FAA] hover:text-[#162F82] font-medium transition-colors"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <span className="font-mono">{log.projects.project_code}</span>
-                                    <span className="text-violet-400/70">·</span>
+                                    <span className="text-[#1C3FAA]/70">·</span>
                                     <span>{log.projects.name}</span>
                                   </Link>
                                 </>

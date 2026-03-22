@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect, useMemo, useTransition, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import type { ProjectChatMessageWithSender, Profile } from '@/types/database'
@@ -9,6 +8,7 @@ import { sendProjectChatMessageAction, markProjectChatReadAction } from '@/app/a
 import { getChatUploadUrlAction } from '@/app/actions/storage'
 import { createClient } from '@/lib/supabase/client'
 import { UPLOAD_BUCKET, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/upload-config'
+import { useProjectChatRealtime } from '@/lib/realtime/hooks'
 
 // ── File type detection ────────────────────────────────────────
 
@@ -107,8 +107,8 @@ function FileKindIcon({ kind, className = 'w-5 h-5' }: { kind: FileKind; classNa
 }
 
 const KIND_COLORS: Record<FileKind, string> = {
-  image:  'bg-violet-100 text-violet-600',
-  video:  'bg-blue-100   text-blue-600',
+  image:  'bg-[#EEF2FF] text-[#1C3FAA]',
+  video:  'bg-[#EEF2FF]   text-[#1C3FAA]',
   pdf:    'bg-red-100    text-red-600',
   word:   'bg-sky-100    text-sky-600',
   excel:  'bg-emerald-100 text-emerald-600',
@@ -138,7 +138,7 @@ function FileCard({
       className={cn(
         'flex items-center gap-3 mt-1.5 px-3 py-2.5 rounded-xl border transition-opacity hover:opacity-80',
         isMine
-          ? 'bg-violet-700/40 border-violet-500/30'
+          ? 'bg-[#1C3FAA]/30 border-[#1C3FAA]/20'
           : 'bg-white border-gray-200 shadow-sm'
       )}
       style={{ minWidth: '200px', maxWidth: '260px' }}
@@ -152,12 +152,12 @@ function FileCard({
         <p className={cn('text-[12px] font-semibold truncate leading-tight', isMine ? 'text-white' : 'text-gray-900')}>
           {name ?? 'File'}
         </p>
-        <p className={cn('text-[10px] mt-0.5', isMine ? 'text-violet-200' : 'text-gray-400')}>
+        <p className={cn('text-[10px] mt-0.5', isMine ? 'text-[#93C5FD]' : 'text-gray-400')}>
           {ext}{size != null ? ` · ${formatBytes(size)}` : ''}
         </p>
       </div>
       {/* Download icon */}
-      <svg className={cn('w-4 h-4 shrink-0', isMine ? 'text-violet-200' : 'text-gray-400')} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <svg className={cn('w-4 h-4 shrink-0', isMine ? 'text-[#93C5FD]' : 'text-gray-400')} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
       </svg>
     </a>
@@ -263,7 +263,7 @@ function StagedPreview({ attachment, uploading, onRemove }: {
       </div>
       {/* Action */}
       {uploading ? (
-        <svg className="w-4 h-4 text-violet-500 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-[#1C3FAA] animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -300,15 +300,22 @@ export function ProjectChatTab({
   initialMessages,
   currentUser,
 }: Props) {
-  const router = useRouter()
   const [input, setInput]             = useState('')
   const [localMsgs, setLocalMsgs]     = useState<ProjectChatMessageWithSender[]>([])
+  const [realtimeMsgs, setRealtimeMsgs] = useState<ProjectChatMessageWithSender[]>([]) // Messages from realtime
   const [sending, startSending]       = useTransition()
   const [staged, setStaged]           = useState<StagedAttachment | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const bottomRef    = useRef<HTMLDivElement>(null)
   const inputRef     = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Stable ref that always holds latest state — used to break the subscription
+  // teardown/re-setup cycle caused by useCallback deps changing on every render.
+  const msgsRef = useRef({ initialMessages, realtimeMsgs, localMsgs })
+  msgsRef.current = { initialMessages, realtimeMsgs, localMsgs }
+  const currentUserRef = useRef(currentUser)
+  currentUserRef.current = currentUser
 
   // Mark as read on mount
   useEffect(() => {
@@ -320,24 +327,101 @@ export function ProjectChatTab({
     bottomRef.current?.scrollIntoView({ behavior: 'auto' })
   }, [])
 
-  // Scroll to bottom when local messages change
+  // Scroll to bottom when local messages change (own optimistic)
   useEffect(() => {
     if (localMsgs.length > 0) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [localMsgs])
 
+  // Scroll to bottom when realtime messages arrive from others
+  useEffect(() => {
+    if (realtimeMsgs.length > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [realtimeMsgs])
+
   // Revoke object URL on staged attachment cleanup
   useEffect(() => {
     return () => { if (staged?.previewUrl) URL.revokeObjectURL(staged.previewUrl) }
   }, [staged])
 
-  // Deduplicate local optimistic messages against confirmed server messages
+  // Deduplicate local optimistic messages + realtime messages against confirmed server messages
   const allMessages = useMemo(() => {
     const serverIds = new Set(initialMessages.map((m) => m.id))
-    const pending   = localMsgs.filter((m) => !serverIds.has(m.id))
-    return [...initialMessages, ...pending]
-  }, [initialMessages, localMsgs])
+    const realtimeIds = new Set(realtimeMsgs.map((m) => m.id))
+    const pending   = localMsgs.filter((m) => !serverIds.has(m.id) && !realtimeIds.has(m.id))
+    return [...initialMessages, ...realtimeMsgs, ...pending]
+  }, [initialMessages, realtimeMsgs, localMsgs])
+
+  // ── Realtime: Subscribe to new messages for this project ──
+  //
+  // IMPORTANT: deps are intentionally [] — this callback must never be recreated.
+  // Re-creating it causes useProjectChatRealtime to teardown and re-subscribe the
+  // Supabase channel, which takes 10–30s to re-establish. Instead, we read current
+  // state from msgsRef (updated every render) to break the dependency cycle.
+
+  const handleRealtimeMessage = useCallback(async (rawMsg: any) => {
+    const msgId = rawMsg.id as string
+    const { initialMessages: curInitial, realtimeMsgs: curRealtime } = msgsRef.current
+    const curUser = currentUserRef.current
+
+    // Deduplicate: real UUIDs can never match the `opt-xxx` IDs in localMsgs,
+    // so we only need to check the server-loaded and realtime lists.
+    const alreadyExists =
+      curInitial.some((m) => m.id === msgId) ||
+      curRealtime.some((m) => m.id === msgId)
+
+    if (alreadyExists) return
+
+    // Resolve sender profile
+    let sender: { id: string; full_name: string; avatar_url: string | null } | null = null
+    if (rawMsg.sender_id) {
+      if (rawMsg.sender_id === curUser.id) {
+        // Own message — profile is already available, no DB round-trip needed.
+        // Also remove the corresponding optimistic message to prevent a duplicate.
+        sender = { id: curUser.id, full_name: curUser.full_name, avatar_url: curUser.avatar_url }
+        setLocalMsgs((prev) => {
+          const optIdx = prev.findIndex(
+            (m) => m.id.startsWith('opt-') && m.sender_id === curUser.id
+          )
+          if (optIdx === -1) return prev
+          return [...prev.slice(0, optIdx), ...prev.slice(optIdx + 1)]
+        })
+      } else {
+        // Other user — fetch their profile once
+        const supabase = createClient()
+        const { data: senderData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('id', rawMsg.sender_id)
+          .single()
+        sender = senderData as any
+      }
+    }
+
+    // Construct full message object
+    const fullMsg: ProjectChatMessageWithSender = {
+      id: rawMsg.id,
+      project_id: rawMsg.project_id,
+      sender_id: rawMsg.sender_id,
+      body: rawMsg.body,
+      created_at: rawMsg.created_at,
+      message_type: rawMsg.message_type ?? 'user',
+      system_event: rawMsg.system_event ?? null,
+      attachment_path: rawMsg.attachment_path ?? null,
+      attachment_name: rawMsg.attachment_name ?? null,
+      attachment_type: rawMsg.attachment_type ?? null,
+      attachment_size: rawMsg.attachment_size ?? null,
+      sender,
+    }
+
+    setRealtimeMsgs((prev) => [...prev, fullMsg])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // stable — reads fresh state via msgsRef
+
+  // Subscribe to realtime messages
+  useProjectChatRealtime(projectId, handleRealtimeMessage, true)
 
   // ── Stage attachment ─────────────────────────────────────────
 
@@ -437,8 +521,10 @@ export function ProjectChatTab({
         setLocalMsgs((prev) => prev.filter((m) => m.id !== optimistic.id))
         return
       }
-
-      router.refresh()
+      // No router.refresh() — the realtime subscription delivers the confirmed
+      // message and removes the optimistic copy. router.refresh() was causing
+      // handleRealtimeMessage to be recreated (via initialMessages dep change),
+      // which tore down the Supabase channel on every send.
     })
   }
 
@@ -460,8 +546,8 @@ export function ProjectChatTab({
     >
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0 bg-white">
-        <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center">
-          <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] flex items-center justify-center">
+          <svg className="w-4 h-4 text-[#1C3FAA]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
           </svg>
         </div>
@@ -567,7 +653,7 @@ export function ProjectChatTab({
                       'relative px-3 py-2 text-[13px] leading-relaxed break-words',
                       isMine
                         ? cn(
-                            'bg-violet-600 text-white',
+                            'bg-[#1C3FAA] text-white',
                             sameAsPrev && sameAsNext ? 'rounded-2xl rounded-tr-[6px]'
                               : sameAsPrev           ? 'rounded-2xl rounded-tr-[6px] rounded-br-[6px]'
                               : sameAsNext           ? 'rounded-2xl rounded-tr-[6px]'
@@ -654,7 +740,7 @@ export function ProjectChatTab({
 
       {/* ── Input ── */}
       <div className="px-3 pb-3 pt-2 border-t border-gray-100 bg-white shrink-0">
-        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-violet-300 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
+        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-[#1C3FAA]/30 focus-within:ring-2 focus-within:ring-[#EEF2FF] transition-all">
           <div className="shrink-0 mb-0.5">
             <Avatar name={currentUser.full_name} avatarUrl={currentUser.avatar_url} size="xs" />
           </div>
@@ -684,8 +770,8 @@ export function ProjectChatTab({
             className={cn(
               'shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-colors',
               staged
-                ? 'bg-violet-100 text-violet-600'
-                : 'text-gray-400 hover:text-violet-600 hover:bg-violet-50 disabled:opacity-40'
+                ? 'bg-[#EEF2FF] text-[#1C3FAA]'
+                : 'text-gray-400 hover:text-[#1C3FAA] hover:bg-[#F0F4FF] disabled:opacity-40'
             )}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -697,7 +783,7 @@ export function ProjectChatTab({
           <button
             onClick={send}
             disabled={!canSend}
-            className="shrink-0 w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center hover:bg-violet-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="shrink-0 w-8 h-8 rounded-xl bg-[#1C3FAA] text-white flex items-center justify-center hover:bg-[#162F82] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             {sending ? (
               <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">

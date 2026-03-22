@@ -33,7 +33,7 @@ function fileTypeColor(mimeType: string): string {
   if (mimeType === 'application/pdf') return 'bg-red-100 text-red-700'
   if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv')
     return 'bg-emerald-100 text-emerald-700'
-  if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-100 text-blue-700'
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-[#EEF2FF] text-[#1C3FAA]'
   if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-100 text-orange-700'
   return 'bg-gray-100 text-gray-600'
 }
@@ -74,7 +74,7 @@ function FileRow({ file, canDelete, onDelete, deleting }: FileRowProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm font-medium text-gray-800 hover:text-violet-600 transition-colors truncate block"
+          className="text-sm font-medium text-[#374151] hover:text-[#1C3FAA] transition-colors truncate block"
         >
           {file.file_name}
         </a>
@@ -91,7 +91,7 @@ function FileRow({ file, canDelete, onDelete, deleting }: FileRowProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:text-[#1C3FAA] hover:bg-[#EEF2FF] transition-colors"
           title="Open file"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ export function ProjectFilesSection({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as MediaCategory)}
-              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600"
+              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] text-gray-600"
             >
               {FILE_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
@@ -224,7 +224,7 @@ export function ProjectFilesSection({
               type="button"
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-[#1C3FAA] hover:bg-[#162F82] text-white rounded-lg transition-colors disabled:opacity-50"
             >
               {uploading ? 'Uploading…' : '+ Upload File'}
             </button>
@@ -247,7 +247,7 @@ export function ProjectFilesSection({
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           className={`mx-6 mt-4 mb-2 border-2 border-dashed rounded-xl py-3 text-center transition-colors ${
-            dragOver ? 'border-violet-400 bg-violet-50' : 'border-gray-200 bg-gray-50/50'
+            dragOver ? 'border-[#1C3FAA] bg-[#EEF2FF]' : 'border-[#E3E1DC] bg-[#FAFAF9]'
           }`}
         >
           <p className="text-xs text-gray-400">

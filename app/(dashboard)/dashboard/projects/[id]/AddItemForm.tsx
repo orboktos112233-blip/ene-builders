@@ -9,7 +9,7 @@ const initialState: ItemActionState = {}
 const STATUS_SUGGESTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled']
 
 const iCls =
-  'w-full text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-colors'
+  'w-full text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-colors'
 const iClsR = iCls + ' text-right tabular-nums'
 
 // Session-level memory — survives form unmount/remount within same page session
@@ -52,7 +52,7 @@ export function AddItemForm({ projectId, sectionId, onClose }: AddItemFormProps)
       ref={formRef}
       action={action}
       onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
-      className="px-4 py-4 bg-violet-50/30 border-b border-violet-100"
+      className="px-4 py-4 bg-[#F5F8FF] border-b border-[#DBEAFE]"
     >
       <input type="hidden" name="project_id" value={projectId} />
       <input type="hidden" name="section_id" value={sectionId} />

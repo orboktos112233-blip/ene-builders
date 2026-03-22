@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 function Spinner({ small }: { small?: boolean }) {
   const size = small ? 'w-4 h-4' : 'w-5 h-5'
   return (
-    <svg className={`animate-spin ${size} text-violet-500`} fill="none" viewBox="0 0 24 24">
+    <svg className={`animate-spin ${size} text-blue-500`} fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -19,7 +19,7 @@ function Spinner({ small }: { small?: boolean }) {
 function Logo() {
   return (
     <div className="flex flex-col items-center mb-8">
-      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center mb-4 shadow-lg shadow-violet-500/25">
+      <div className="w-12 h-12 rounded-2xl bg-[#111018] flex items-center justify-center mb-4">
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
         </svg>
@@ -215,7 +215,7 @@ function CallbackContent() {
         </div>
         <p className="text-sm font-semibold text-gray-800 mb-2">Invalid invite link</p>
         <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">{errMsg || 'This link has expired or has already been used.'}</p>
-        <a href="/login" className="text-sm font-semibold text-violet-600 hover:text-violet-800 transition-colors">
+        <a href="/login" className="text-sm font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors">
           Back to login
         </a>
       </div>
@@ -251,7 +251,7 @@ function CallbackContent() {
             required
             autoComplete="new-password"
             autoFocus
-            className="w-full px-4 py-2.5 pr-10 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+            className="w-full px-4 py-2.5 pr-10 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
           />
           <button
             type="button"
@@ -287,14 +287,14 @@ function CallbackContent() {
           placeholder="Repeat your password"
           required
           autoComplete="new-password"
-          className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+          className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
         />
       </div>
 
       <button
         type="submit"
         disabled={status === 'saving'}
-        className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+        className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1C3FAA] hover:bg-[#162F82] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
       >
         {status === 'saving' ? (
           <>

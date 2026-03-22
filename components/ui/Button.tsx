@@ -16,19 +16,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97] select-none',
+          'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.97] select-none',
           {
-            // Primary — violet gradient
-            'bg-gradient-to-b from-violet-500 to-violet-700 text-white shadow-md shadow-violet-500/20 hover:shadow-lg hover:shadow-violet-500/30 hover:to-violet-800 focus-visible:ring-violet-500': variant === 'primary',
-            // Secondary — clean white
-            'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus-visible:ring-gray-300 shadow-sm': variant === 'secondary',
-            // Ghost
-            'text-gray-500 hover:bg-gray-100/80 hover:text-gray-700 focus-visible:ring-gray-300': variant === 'ghost',
-            // Danger
-            'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-md shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/30 focus-visible:ring-red-500': variant === 'danger',
+            // Primary — deep calm navy
+            'bg-[#1C3FAA] text-white hover:bg-[#162F82] focus-visible:ring-[#1C3FAA] focus-visible:ring-offset-2': variant === 'primary',
+            // Secondary — clean white with warm border
+            'bg-white text-[#374151] border border-[#E3E1DC] hover:bg-[#F5F4F0] focus-visible:ring-[#1C3FAA]': variant === 'secondary',
+            // Ghost — minimal, no border
+            'text-[#6B7280] hover:bg-[#EDEBE6] hover:text-[#374151] focus-visible:ring-[#9CA3AF]': variant === 'ghost',
+            // Danger — subdued red
+            'bg-[#DC2626] text-white hover:bg-[#B91C1C] focus-visible:ring-[#DC2626] focus-visible:ring-offset-2': variant === 'danger',
           },
           {
-            'text-xs px-3.5 py-1.5 gap-1.5 rounded-lg': size === 'sm',
+            'text-xs px-3.5 py-1.5 gap-1.5 rounded-md': size === 'sm',
             'text-sm px-4.5 py-2.5 gap-2':              size === 'md',
             'text-sm px-6 py-3 gap-2':                  size === 'lg',
           },

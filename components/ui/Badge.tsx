@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { ProjectStatus, Role } from '@/types/database'
 
-type BadgeVariant = 'gray' | 'blue' | 'yellow' | 'orange' | 'green' | 'red' | 'purple' | 'violet'
+type BadgeVariant = 'gray' | 'blue' | 'yellow' | 'orange' | 'green' | 'red' | 'indigo'
 
 interface BadgeProps {
   children: React.ReactNode
@@ -13,30 +13,19 @@ export function Badge({ children, variant = 'gray', className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-semibold tracking-wide border',
+        'inline-flex items-center px-2 py-[3px] rounded-md text-[11px] font-semibold tracking-wide border',
         {
-          'bg-gray-100 text-gray-600 border-gray-200/60':       variant === 'gray',
-          'bg-sky-50 text-sky-700 border-sky-200/60':           variant === 'blue',
-          'bg-amber-50 text-amber-700 border-amber-200/60':     variant === 'yellow',
-          'bg-orange-50 text-orange-700 border-orange-200/60':  variant === 'orange',
-          'bg-emerald-50 text-emerald-700 border-emerald-200/60': variant === 'green',
-          'bg-red-50 text-red-700 border-red-200/60':           variant === 'red',
-          'bg-purple-50 text-purple-700 border-purple-200/60':  variant === 'purple',
-          'bg-violet-50 text-violet-700 border-violet-200/60':  variant === 'violet',
+          'bg-[#F4F4F5] text-[#52525B] border-[#E4E4E7]':                 variant === 'gray',
+          'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]':                 variant === 'blue',
+          'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]':                 variant === 'yellow',
+          'bg-[#FFF7ED] text-[#C2410C] border-[#FED7AA]':                 variant === 'orange',
+          'bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]':                 variant === 'green',
+          'bg-[#FEF2F2] text-[#991B1B] border-[#FECACA]':                 variant === 'red',
+          'bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]':                 variant === 'indigo',
         },
         className
       )}
     >
-      <span className={cn('inline-block w-1.5 h-1.5 rounded-full shrink-0', {
-        'bg-gray-400':    variant === 'gray',
-        'bg-sky-500':     variant === 'blue',
-        'bg-amber-500':   variant === 'yellow',
-        'bg-orange-400':  variant === 'orange',
-        'bg-emerald-500': variant === 'green',
-        'bg-red-400':     variant === 'red',
-        'bg-purple-500':  variant === 'purple',
-        'bg-violet-500':  variant === 'violet',
-      })} />
       {children}
     </span>
   )
@@ -46,7 +35,7 @@ const STATUS_VARIANTS: Record<ProjectStatus, BadgeVariant> = {
   planning:    'gray',
   in_progress: 'blue',
   finishing:   'orange',
-  inspection:  'purple',
+  inspection:  'indigo',
   completed:   'green',
 }
 
@@ -67,9 +56,9 @@ export function StatusBadge({ status }: { status: ProjectStatus }) {
 }
 
 const ROLE_VARIANTS: Record<Role, BadgeVariant> = {
-  admin:           'violet',
+  admin:           'indigo',
   office:          'blue',
-  project_manager: 'purple',
+  project_manager: 'blue',
   worker:          'yellow',
   client:          'gray',
 }
@@ -100,7 +89,7 @@ function resolveItemStatusVariant(status: string): BadgeVariant {
 }
 
 export function ItemStatusBadge({ status }: { status: string | null }) {
-  if (!status) return <span className="text-gray-300">—</span>
+  if (!status) return <span className="text-[#9CA3AF]">—</span>
   return (
     <Badge variant={resolveItemStatusVariant(status)}>
       {status}

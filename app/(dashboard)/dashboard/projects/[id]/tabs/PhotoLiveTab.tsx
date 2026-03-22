@@ -215,12 +215,12 @@ function MediaCard({ file, canDelete, canReview, onDelete, onReview, deleting, r
         <div className="px-3 py-2.5 flex flex-col gap-1.5 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 rounded-full bg-[#EEF2FF] flex items-center justify-center shrink-0">
                 {file.profiles?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={file.profiles.avatar_url} alt={uploaderName} className="w-5 h-5 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[8px] font-bold text-violet-600">{avatarInitials(uploaderName)}</span>
+                  <span className="text-[8px] font-bold text-[#1C3FAA]">{avatarInitials(uploaderName)}</span>
                 )}
               </div>
               <span className="text-xs font-semibold text-gray-800 truncate">{uploaderName}</span>
@@ -628,7 +628,7 @@ export function PhotoLiveTab({
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder="Describe what you're uploading…"
                 disabled={uploading}
-                className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 placeholder:text-gray-300 disabled:opacity-50"
+                className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] placeholder:text-gray-300 disabled:opacity-50"
               />
             </div>
 
@@ -642,8 +642,8 @@ export function PhotoLiveTab({
                 uploading
                   ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed opacity-60'
                   : dragOver
-                    ? 'border-violet-400 bg-violet-50 cursor-pointer'
-                    : 'border-gray-200 bg-gray-50/50 hover:border-violet-300 hover:bg-violet-50/30 cursor-pointer'
+                    ? 'border-[#1C3FAA] bg-[#EEF2FF] cursor-pointer'
+                    : 'border-gray-200 bg-gray-50/50 hover:border-[#1C3FAA]/30 hover:bg-[#F5F8FF] cursor-pointer'
               }`}
             >
               <div className="flex flex-col items-center gap-1.5">
@@ -737,7 +737,7 @@ export function PhotoLiveTab({
               type="button"
               onClick={sendLivePhoto}
               disabled={staged.length === 0 || uploading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#1C3FAA] hover:bg-[#162F82] disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
             >
               {uploading ? (
                 <>
@@ -805,7 +805,7 @@ export function PhotoLiveTab({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <select
                 value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600 max-w-[130px]"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] text-gray-600 max-w-[130px]"
               >
                 <option value="all">All dates</option>
                 {dateOptions.map((d) => <option key={d} value={d}>{formatDateLabel(d)}</option>)}
@@ -814,7 +814,7 @@ export function PhotoLiveTab({
               {uploaderOptions.length > 1 && (
                 <select
                   value={filterUploader} onChange={(e) => setFilterUploader(e.target.value)}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600 max-w-[130px]"
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] text-gray-600 max-w-[130px]"
                 >
                   <option value="all">All workers</option>
                   {uploaderOptions.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -824,7 +824,7 @@ export function PhotoLiveTab({
               {videoCount > 0 && (
                 <select
                   value={filterType} onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600 max-w-[130px]"
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] text-gray-600 max-w-[130px]"
                 >
                   <option value="all">All types</option>
                   <option value="image">Photos</option>
@@ -834,7 +834,7 @@ export function PhotoLiveTab({
 
               <select
                 value={filterReview} onChange={(e) => setFilterReview(e.target.value as typeof filterReview)}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-gray-600 max-w-[130px]"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] text-gray-600 max-w-[130px]"
               >
                 <option value="all">All status</option>
                 <option value="not_reviewed">Pending</option>
@@ -843,7 +843,7 @@ export function PhotoLiveTab({
 
               {hasFilters && (
                 <button type="button" onClick={clearFilters}
-                  className="text-xs text-violet-600 hover:text-violet-800 font-semibold underline underline-offset-2 transition-colors"
+                  className="text-xs text-[#1C3FAA] hover:text-[#162F82] font-semibold underline underline-offset-2 transition-colors"
                 >Clear</button>
               )}
 
@@ -873,7 +873,7 @@ export function PhotoLiveTab({
             <div className="text-center py-10">
               <p className="text-sm font-medium text-gray-400">No files match your filters</p>
               <button type="button" onClick={clearFilters}
-                className="mt-2 text-xs text-violet-600 hover:text-violet-800 font-semibold underline underline-offset-2"
+                className="mt-2 text-xs text-[#1C3FAA] hover:text-[#162F82] font-semibold underline underline-offset-2"
               >Clear filters</button>
             </div>
           ) : (

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo, useTransition } from 'react'
+import { useState, useRef, useEffect, useMemo, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { createClient } from '@/lib/supabase/client'
 import { UPLOAD_BUCKET, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/upload-config'
+import { useDirectMessagesRealtime, useProjectChatRealtime } from '@/lib/realtime/hooks'
 import type {
   Profile,
   ConversationSummary,
@@ -98,8 +99,8 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 const KIND_COLORS: Record<FileKind, string> = {
-  image: 'bg-violet-100 text-violet-600',
-  video: 'bg-blue-100   text-blue-600',
+  image: 'bg-[#EEF2FF] text-[#1C3FAA]',
+  video: 'bg-[#EEF2FF]   text-[#1C3FAA]',
   pdf:   'bg-red-100    text-red-600',
   word:  'bg-sky-100    text-sky-600',
   excel: 'bg-emerald-100 text-emerald-600',
@@ -180,7 +181,7 @@ function AttachmentBubble({
       className={cn(
         'flex items-center gap-2.5 mt-1.5 px-3 py-2 rounded-xl border transition-opacity hover:opacity-80',
         isMine
-          ? 'bg-violet-700/40 border-violet-500/30'
+          ? 'bg-[#1C3FAA]/40 border-[#1C3FAA]/30'
           : 'bg-white border-gray-200 shadow-sm'
       )}
       style={{ minWidth: '180px', maxWidth: '240px' }}
@@ -192,11 +193,11 @@ function AttachmentBubble({
         <p className={cn('text-[11px] font-semibold truncate', isMine ? 'text-white' : 'text-gray-900')}>
           {name ?? 'File'}
         </p>
-        <p className={cn('text-[10px]', isMine ? 'text-violet-200' : 'text-gray-400')}>
+        <p className={cn('text-[10px]', isMine ? 'text-blue-200' : 'text-gray-400')}>
           {ext}{size != null ? ` · ${formatBytes(size)}` : ''}
         </p>
       </div>
-      <svg className={cn('w-3.5 h-3.5 shrink-0', isMine ? 'text-violet-200' : 'text-gray-400')} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <svg className={cn('w-3.5 h-3.5 shrink-0', isMine ? 'text-blue-200' : 'text-gray-400')} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
       </svg>
     </a>
@@ -237,7 +238,7 @@ function StagedPreview({
         <p className="text-[10px] text-gray-400">{formatBytes(attachment.file.size)}</p>
       </div>
       {uploading ? (
-        <svg className="w-4 h-4 text-violet-500 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-[#1C3FAA] animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -287,7 +288,7 @@ function NewConversationDialog({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people..."
-            className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-violet-400"
+            className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#1C3FAA]"
           />
         </div>
         <ul className="max-h-64 overflow-y-auto divide-y divide-gray-50">
@@ -321,12 +322,14 @@ function DmThreadView({
   profile,
   conv,
   serverMessages,
+  realtimeMessages,
   onBack,
 }: {
-  profile:        Profile
-  conv:           ConversationSummary | null
-  serverMessages: MessageWithSender[]
-  onBack:         () => void
+  profile:         Profile
+  conv:            ConversationSummary | null
+  serverMessages:  MessageWithSender[]
+  realtimeMessages: MessageWithSender[]
+  onBack:          () => void
 }) {
   const router                    = useRouter()
   const [input, setInput]         = useState('')
@@ -339,14 +342,15 @@ function DmThreadView({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setLocalMsgs([]); setInput(''); setStaged(null); setError(null) }, [conv?.id])
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [serverMessages, localMsgs])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [serverMessages, realtimeMessages, localMsgs])
   useEffect(() => () => { if (staged?.previewUrl) URL.revokeObjectURL(staged.previewUrl) }, [staged])
 
   const allMessages = useMemo(() => {
     const serverIds = new Set(serverMessages.map((m) => m.id))
-    const pending   = localMsgs.filter((m) => !serverIds.has(m.id))
-    return [...serverMessages, ...pending]
-  }, [serverMessages, localMsgs])
+    const realtimeIds = new Set(realtimeMessages.map((m) => m.id))
+    const pending   = localMsgs.filter((m) => !serverIds.has(m.id) && !realtimeIds.has(m.id))
+    return [...serverMessages, ...realtimeMessages, ...pending]
+  }, [serverMessages, realtimeMessages, localMsgs])
 
   function stageFile(file: File) {
     setError(null)
@@ -503,7 +507,7 @@ function DmThreadView({
                   <div className={cn(
                     'px-3 py-2 rounded-2xl text-[13px] leading-relaxed break-words',
                     isMine
-                      ? cn('bg-violet-600 text-white', sameAsPrev ? 'rounded-tr-[6px]' : '', sameAsNext ? 'rounded-br-[6px]' : '', isOpt && 'opacity-75')
+                      ? cn('bg-[#1C3FAA] text-white', sameAsPrev ? 'rounded-tr-[6px]' : '', sameAsNext ? 'rounded-br-[6px]' : '', isOpt && 'opacity-75')
                       : cn('bg-gray-100 text-gray-900', sameAsPrev ? 'rounded-tl-[6px]' : '', sameAsNext ? 'rounded-bl-[6px]' : '')
                   )}>
                     {msg.body && <span>{msg.body}</span>}
@@ -554,7 +558,7 @@ function DmThreadView({
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 border-t border-gray-100 shrink-0">
-        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-violet-300 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
+        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-[#1C3FAA] focus-within:ring-2 focus-within:ring-[#1C3FAA]/20 transition-all">
           <textarea
             ref={inputRef}
             rows={1}
@@ -573,7 +577,7 @@ function DmThreadView({
             onClick={() => fileInputRef.current?.click()}
             className={cn(
               'shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors',
-              staged ? 'bg-violet-100 text-violet-600' : 'text-gray-400 hover:text-violet-600 hover:bg-violet-50 disabled:opacity-40'
+              staged ? 'bg-[#EEF2FF] text-[#1C3FAA]' : 'text-gray-400 hover:text-[#1C3FAA] hover:bg-[#EEF2FF] disabled:opacity-40'
             )}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -584,7 +588,7 @@ function DmThreadView({
           <button
             onClick={send}
             disabled={(!input.trim() && !staged) || sending}
-            className="shrink-0 w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="shrink-0 w-8 h-8 rounded-xl bg-[#1C3FAA] text-white flex items-center justify-center hover:bg-[#162F82] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (
               <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -620,14 +624,16 @@ function ProjectChatThread({
   projectCode,
   projectName,
   serverMessages,
+  realtimeMessages,
   onBack,
 }: {
-  profile:        Profile
-  projectId:      string
-  projectCode:    string
-  projectName:    string
-  serverMessages: ProjectChatMessageWithSender[]
-  onBack:         () => void
+  profile:          Profile
+  projectId:        string
+  projectCode:      string
+  projectName:      string
+  serverMessages:   ProjectChatMessageWithSender[]
+  realtimeMessages: ProjectChatMessageWithSender[]
+  onBack:           () => void
 }) {
   const router                    = useRouter()
   const [input, setInput]         = useState('')
@@ -647,9 +653,10 @@ function ProjectChatThread({
 
   const allMessages = useMemo(() => {
     const serverIds = new Set(serverMessages.map((m) => m.id))
-    const pending   = localMsgs.filter((m) => !serverIds.has(m.id))
-    return [...serverMessages, ...pending]
-  }, [serverMessages, localMsgs])
+    const realtimeIds = new Set(realtimeMessages.map((m) => m.id))
+    const pending   = localMsgs.filter((m) => !serverIds.has(m.id) && !realtimeIds.has(m.id))
+    return [...serverMessages, ...realtimeMessages, ...pending]
+  }, [serverMessages, realtimeMessages, localMsgs])
 
   function stageFile(file: File) {
     setError(null)
@@ -735,8 +742,8 @@ function ProjectChatThread({
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-          <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] flex items-center justify-center shrink-0">
+          <svg className="w-4 h-4 text-[#1C3FAA]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
           </svg>
         </div>
@@ -806,7 +813,7 @@ function ProjectChatThread({
                   <div className={cn(
                     'px-3 py-2 text-[13px] leading-relaxed break-words rounded-2xl',
                     isMine
-                      ? cn('bg-violet-600 text-white', sameAsPrev && 'rounded-tr-[6px]', sameAsNext && 'rounded-br-[6px]', isOpt && 'opacity-75')
+                      ? cn('bg-[#1C3FAA] text-white', sameAsPrev && 'rounded-tr-[6px]', sameAsNext && 'rounded-br-[6px]', isOpt && 'opacity-75')
                       : cn('bg-gray-100 text-gray-900', sameAsPrev && 'rounded-tl-[6px]', sameAsNext && 'rounded-bl-[6px]')
                   )}>
                     {msg.body && <span>{msg.body}</span>}
@@ -858,7 +865,7 @@ function ProjectChatThread({
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 border-t border-gray-100 shrink-0">
-        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-violet-300 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
+        <div className="flex items-end gap-2 bg-gray-50 rounded-2xl border border-gray-200 px-3 py-2 focus-within:border-[#1C3FAA] focus-within:ring-2 focus-within:ring-[#1C3FAA]/20 transition-all">
           <div className="shrink-0 mb-0.5">
             <Avatar name={profile.full_name} avatarUrl={profile.avatar_url} size="xs" />
           </div>
@@ -879,7 +886,7 @@ function ProjectChatThread({
             onClick={() => fileInputRef.current?.click()}
             className={cn(
               'shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors',
-              staged ? 'bg-violet-100 text-violet-600' : 'text-gray-400 hover:text-violet-600 hover:bg-violet-50 disabled:opacity-40'
+              staged ? 'bg-[#EEF2FF] text-[#1C3FAA]' : 'text-gray-400 hover:text-[#1C3FAA] hover:bg-[#EEF2FF] disabled:opacity-40'
             )}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -889,7 +896,7 @@ function ProjectChatThread({
           <button
             onClick={send}
             disabled={(!input.trim() && !staged) || sending}
-            className="shrink-0 w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="shrink-0 w-8 h-8 rounded-xl bg-[#1C3FAA] text-white flex items-center justify-center hover:bg-[#162F82] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (
               <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -940,7 +947,7 @@ function ConversationList({
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
           </svg>
           <p className="text-sm text-gray-400">No conversations yet</p>
-          <button onClick={onNew} className="text-sm font-medium text-violet-600 hover:underline">Start one</button>
+          <button onClick={onNew} className="text-sm font-medium text-[#1C3FAA] hover:underline">Start one</button>
         </div>
       ) : (
         conversations.map((conv) => {
@@ -952,7 +959,7 @@ function ConversationList({
               onClick={() => onSelect(conv.id)}
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-gray-50',
-                isActive ? 'bg-violet-50' : 'hover:bg-gray-50'
+                isActive ? 'bg-[#EEF2FF]' : 'hover:bg-gray-50'
               )}
             >
               <Avatar name={conv.otherUser?.full_name ?? '?'} avatarUrl={conv.otherUser?.avatar_url ?? null} size="sm" />
@@ -972,7 +979,7 @@ function ConversationList({
                       : 'No messages yet'}
                   </p>
                   {isUnread && (
-                    <span className="shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-violet-600 text-[10px] font-bold text-white">
+                    <span className="shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-[#1C3FAA] text-[10px] font-bold text-white">
                       {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
                     </span>
                   )}
@@ -1019,11 +1026,11 @@ function ProjectChatList({
             onClick={() => onSelect(proj.projectId)}
             className={cn(
               'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-gray-50',
-              isActive ? 'bg-violet-50' : 'hover:bg-gray-50'
+              isActive ? 'bg-[#EEF2FF]' : 'hover:bg-gray-50'
             )}
           >
-            <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-[#1C3FAA]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
               </svg>
             </div>
@@ -1041,7 +1048,7 @@ function ProjectChatList({
                   {proj.lastMessage?.body ?? proj.projectName}
                 </p>
                 {isUnread && (
-                  <span className="shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-violet-600 text-[10px] font-bold text-white">
+                  <span className="shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-[#1C3FAA] text-[10px] font-bold text-white">
                     {proj.unreadCount > 9 ? '9+' : proj.unreadCount}
                   </span>
                 )}
@@ -1090,6 +1097,10 @@ export function MessagesClient({
 
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [starting, startStarting]         = useTransition()
+  
+  // Realtime message tracking
+  const [realtimeDmMessages, setRealtimeDmMessages] = useState<MessageWithSender[]>([])
+  const [realtimeProjectMessages, setRealtimeProjectMessages] = useState<ProjectChatMessageWithSender[]>([])
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId) ?? null
 
@@ -1097,6 +1108,92 @@ export function MessagesClient({
   useEffect(() => {
     if (selectedConvId) markConversationReadAction(selectedConvId)
   }, [selectedConvId])
+
+  // ── Realtime: Handle new DM messages ──────────────────────────
+
+  const handleNewDmMessage = useCallback(async (rawMsg: any) => {
+    const msgId = rawMsg.id as string
+
+    // Check for duplicates (by id, in threadMessages + realtime state)
+    if (threadMessages.some((m) => m.id === msgId) || realtimeDmMessages.some((m) => m.id === msgId)) {
+      return
+    }
+
+    // Resolve sender profile
+    let sender: any = null
+    if (rawMsg.sender_id) {
+      const supabase = createClient()
+      const { data: senderData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', rawMsg.sender_id)
+        .single()
+      sender = senderData
+    }
+
+    // Construct full message
+    const fullMsg: MessageWithSender = {
+      id: msgId,
+      conversation_id: rawMsg.conversation_id,
+      sender_id: rawMsg.sender_id,
+      body: rawMsg.body,
+      created_at: rawMsg.created_at,
+      attachment_path: rawMsg.attachment_path ?? null,
+      attachment_name: rawMsg.attachment_name ?? null,
+      attachment_type: rawMsg.attachment_type ?? null,
+      attachment_size: rawMsg.attachment_size ?? null,
+      sender,
+    }
+
+    setRealtimeDmMessages((prev) => [...prev, fullMsg])
+  }, [threadMessages, realtimeDmMessages])
+
+  // Subscribe to DM realtime
+  useDirectMessagesRealtime(selectedConvId, handleNewDmMessage, !!selectedConvId)
+
+  // ── Realtime: Handle new project chat messages ─────────────────
+
+  const handleNewProjectMessage = useCallback(async (rawMsg: any) => {
+    const msgId = rawMsg.id as string
+
+    // Check for duplicates
+    if (projectChatMessages.some((m) => m.id === msgId) || realtimeProjectMessages.some((m) => m.id === msgId)) {
+      return
+    }
+
+    // Resolve sender profile
+    let sender: any = null
+    if (rawMsg.sender_id) {
+      const supabase = createClient()
+      const { data: senderData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', rawMsg.sender_id)
+        .single()
+      sender = senderData
+    }
+
+    // Construct full message
+    const fullMsg: ProjectChatMessageWithSender = {
+      id: msgId,
+      project_id: rawMsg.project_id,
+      sender_id: rawMsg.sender_id,
+      body: rawMsg.body,
+      created_at: rawMsg.created_at,
+      message_type: rawMsg.message_type ?? 'user',
+      system_event: rawMsg.system_event ?? null,
+      attachment_path: rawMsg.attachment_path ?? null,
+      attachment_name: rawMsg.attachment_name ?? null,
+      attachment_type: rawMsg.attachment_type ?? null,
+      attachment_size: rawMsg.attachment_size ?? null,
+      sender,
+    }
+
+    setRealtimeProjectMessages((prev) => [...prev, fullMsg])
+  }, [projectChatMessages, realtimeProjectMessages])
+
+  // Subscribe to project chat realtime
+  useProjectChatRealtime(selectedProjectId ?? '', handleNewProjectMessage, !!selectedProjectId)
 
   const selectConversation = (id: string) => {
     router.push(`/dashboard/messages?c=${id}`)
@@ -1146,7 +1243,7 @@ export function MessagesClient({
           {activeTab === 'dm' && (
             <button
               onClick={() => setShowNewDialog(true)}
-              className="flex items-center gap-1.5 text-[12px] font-medium text-violet-600 hover:text-violet-700 px-2.5 py-1 rounded-lg hover:bg-violet-50 transition-colors"
+              className="flex items-center gap-1.5 text-[12px] font-medium text-[#1C3FAA] hover:text-[#162F82] px-2.5 py-1 rounded-lg hover:bg-[#F0F4FF] transition-colors"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -1164,7 +1261,7 @@ export function MessagesClient({
               className={cn(
                 'flex-1 py-2.5 text-[12px] font-semibold transition-colors',
                 activeTab === 'dm'
-                  ? 'text-violet-600 border-b-2 border-violet-600 -mb-px'
+                  ? 'text-[#1C3FAA] border-b-2 border-[#1C3FAA] -mb-px'
                   : 'text-gray-400 hover:text-gray-600'
               )}
             >
@@ -1175,13 +1272,13 @@ export function MessagesClient({
               className={cn(
                 'flex-1 py-2.5 text-[12px] font-semibold transition-colors relative',
                 activeTab === 'projects'
-                  ? 'text-violet-600 border-b-2 border-violet-600 -mb-px'
+                  ? 'text-[#1C3FAA] border-b-2 border-[#1C3FAA] -mb-px'
                   : 'text-gray-400 hover:text-gray-600'
               )}
             >
               Projects
               {projectConversations.some((p) => p.unreadCount > 0) && activeTab !== 'projects' && (
-                <span className="absolute top-2 right-4 w-1.5 h-1.5 rounded-full bg-violet-500" />
+                <span className="absolute top-2 right-4 w-1.5 h-1.5 rounded-full bg-[#1C3FAA]" />
               )}
             </button>
           </div>
@@ -1214,6 +1311,7 @@ export function MessagesClient({
             projectCode={selectedProjectCode}
             projectName={selectedProjectName}
             serverMessages={projectChatMessages}
+            realtimeMessages={realtimeProjectMessages}
             onBack={goBack}
           />
         ) : rightPanel === 'dm' ? (
@@ -1221,6 +1319,7 @@ export function MessagesClient({
             profile={profile}
             conv={selectedConv}
             serverMessages={threadMessages}
+            realtimeMessages={realtimeDmMessages}
             onBack={goBack}
           />
         ) : (

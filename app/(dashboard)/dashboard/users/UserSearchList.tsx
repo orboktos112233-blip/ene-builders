@@ -38,7 +38,7 @@ export function UserSearchList({ users }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search users..."
-            className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+            className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
           />
           {query && (
             <button
@@ -88,7 +88,7 @@ export function UserSearchList({ users }: Props) {
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                className="mt-4 text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors"
+                className="mt-4 text-xs text-[#1C3FAA] hover:text-[#162F82] font-medium transition-colors"
               >
                 Clear search
               </button>

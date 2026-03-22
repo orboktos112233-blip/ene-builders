@@ -16,8 +16,8 @@ const STATUS_SUGGESTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled']
 // Input styles — consistent across all edit cells
 const iCls =
   'w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white ' +
-  'placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 ' +
-  'focus:border-violet-400 transition-colors'
+  'placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 ' +
+  'focus:border-[#1C3FAA] transition-colors'
 const iClsR = iCls + ' text-right tabular-nums'
 
 function display(v: string | number | null | undefined): string {
@@ -79,7 +79,7 @@ function MobileItemCard({
     return (
       <div className={cn(
         'px-4 py-4 border-b border-gray-100 last:border-0 transition-colors',
-        saved ? 'bg-emerald-50' : 'bg-violet-50/30'
+        saved ? 'bg-emerald-50' : 'bg-[#F5F8FF]'
       )}>
         <form id={formId} action={updateAction} className="space-y-2">
           <input type="hidden" name="item_id"    value={item.id} />
@@ -191,7 +191,7 @@ function MobileItemCard({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-xs font-semibold text-violet-600 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100 hover:bg-violet-100 transition-colors"
+              className="text-xs font-semibold text-[#1C3FAA] px-3 py-1.5 rounded-lg bg-[#EEF2FF] border border-[#DBEAFE] hover:bg-[#EEF2FF] transition-colors"
             >
               Edit
             </button>
@@ -260,7 +260,7 @@ function ItemRow({
           'border-b transition-colors duration-300',
           saved
             ? 'bg-emerald-50 border-emerald-100'
-            : 'bg-violet-50/20 border-violet-100/60'
+            : 'bg-[#FAFBFF] border-[#C7D2FE]/60'
         )}
         onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false) }}
       >
@@ -347,7 +347,7 @@ function ItemRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-[11px] font-semibold text-gray-400 hover:text-violet-600 px-2 py-1 rounded-md hover:bg-violet-50 transition-colors"
+              className="text-[11px] font-semibold text-gray-400 hover:text-[#1C3FAA] px-2 py-1 rounded-md hover:bg-[#F0F4FF] transition-colors"
             >
               Edit
             </button>

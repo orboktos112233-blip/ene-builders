@@ -88,7 +88,7 @@ export function ProjectSearchList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search projects..."
-            className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+            className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
           />
           {query && (
             <button
@@ -108,7 +108,7 @@ export function ProjectSearchList({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="py-2 pl-3 pr-7 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all appearance-none cursor-pointer"
+          className="py-2 pl-3 pr-7 text-sm bg-white border border-black/[0.08] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all appearance-none cursor-pointer"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19 9-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '14px' }}
         >
           {STATUS_OPTIONS.map((o) => (
@@ -121,7 +121,7 @@ export function ProjectSearchList({
           <button
             type="button"
             onClick={clearAll}
-            className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors px-2 py-1"
+            className="text-xs font-semibold text-[#1C3FAA] hover:text-[#162F82] transition-colors px-2 py-1"
           >
             Clear filters
           </button>
@@ -155,7 +155,7 @@ export function ProjectSearchList({
             <button
               type="button"
               onClick={clearAll}
-              className="mt-4 text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors"
+              className="mt-4 text-xs text-[#1C3FAA] hover:text-[#162F82] font-medium transition-colors"
             >
               Clear all filters
             </button>
@@ -200,7 +200,7 @@ export function ProjectSearchList({
                 <Link
                   key={project.id}
                   href={`/dashboard/projects/${project.id}`}
-                  className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_90px_100px_90px_100px_100px_100px_140px_80px] items-center px-5 md:px-6 py-5 hover:bg-violet-50/20 transition-colors duration-100 group"
+                  className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_90px_100px_90px_100px_100px_100px_140px_80px] items-center px-5 md:px-6 py-5 hover:bg-[#FAFBFF] transition-colors duration-100 group"
                 >
                   {/* Project name / meta */}
                   <div className="min-w-0 pr-4 md:pr-6">
@@ -215,7 +215,7 @@ export function ProjectSearchList({
                         </span>
                       )}
                     </div>
-                    <p className="text-[15px] font-semibold text-gray-900 group-hover:text-violet-700 transition-colors duration-100 truncate leading-snug">
+                    <p className="text-[15px] font-semibold text-gray-900 group-hover:text-[#1C3FAA] transition-colors duration-100 truncate leading-snug">
                       {project.name}
                     </p>
                     {(project.address || project.client_name) && (

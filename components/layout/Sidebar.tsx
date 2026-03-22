@@ -92,12 +92,12 @@ function SidebarContent({ profile, unreadMessages, onClose }: { profile: Profile
       {/* ── Brand ── */}
       <div className="h-[60px] flex items-center px-5 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-[9px] bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center shrink-0 shadow-lg shadow-violet-900/40">
+          <div className="w-7 h-7 rounded-[9px] bg-[#1C3FAA] flex items-center justify-center shrink-0">
             <svg className="w-[15px] h-[15px] text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
             </svg>
           </div>
-          <span className="text-[13px] font-bold text-white tracking-tight">ENE Builders</span>
+          <span className="text-[13px] font-semibold text-white tracking-tight">ENE Builders</span>
         </div>
       </div>
 
@@ -114,21 +114,21 @@ function SidebarContent({ profile, unreadMessages, onClose }: { profile: Profile
               href={item.href}
               onClick={onClose}
               className={cn(
-                'relative flex items-center gap-3 px-3 py-[9px] rounded-xl text-[13px] font-medium transition-all duration-150',
+                'relative flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-white/[0.09] text-white'
-                  : 'text-gray-500 hover:bg-white/[0.04] hover:text-gray-200'
+                  ? 'bg-white/[0.08] text-white'
+                  : 'text-[#71717A] hover:bg-white/[0.04] hover:text-[#D4D4D8]'
               )}
             >
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-violet-400 rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[#3B82F6] rounded-r-full" />
               )}
-              <span className={cn('shrink-0 transition-colors', isActive ? 'text-violet-400' : 'text-gray-600 group-hover:text-gray-400')}>
+              <span className={cn('shrink-0 transition-colors', isActive ? 'text-[#3B82F6]' : 'text-[#52525B]')}>
                 {item.icon}
               </span>
               <span className="flex-1">{item.label}</span>
               {item.badge != null && item.badge > 0 && (
-                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-500 text-[10px] font-bold text-white">
+                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#3B82F6] text-[10px] font-bold text-white">
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
               )}
@@ -139,21 +139,21 @@ function SidebarContent({ profile, unreadMessages, onClose }: { profile: Profile
 
       {/* ── User ── */}
       <div className="px-3 pb-4 shrink-0">
-        <div className="h-px bg-white/[0.07] mb-3" />
+        <div className="h-px bg-white/[0.06] mb-3" />
         <Link
           href="/dashboard/profile"
           onClick={onClose}
           className={cn(
-            'flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all duration-150',
-            pathname === '/dashboard/profile' ? 'bg-white/[0.09]' : 'hover:bg-white/[0.04]'
+            'flex items-center gap-3 px-2.5 py-2 rounded-lg transition-all duration-150',
+            pathname === '/dashboard/profile' ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'
           )}
         >
           <Avatar name={profile.full_name} avatarUrl={profile.avatar_url} size="sm" />
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-gray-200 truncate leading-tight">{profile.full_name}</p>
-            <p className="text-[11px] text-gray-600 mt-0.5 truncate">{ROLE_LABELS[profile.role] ?? profile.role}</p>
+            <p className="text-[13px] font-semibold text-[#E4E4E7] truncate leading-tight">{profile.full_name}</p>
+            <p className="text-[11px] text-[#52525B] mt-0.5 truncate">{ROLE_LABELS[profile.role] ?? profile.role}</p>
           </div>
-          <svg className="w-3 h-3 text-gray-700 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+          <svg className="w-3 h-3 text-[#52525B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
         </Link>
@@ -172,18 +172,18 @@ export function Sidebar({ profile, unreadMessages }: { profile: Profile; unreadM
       {/* ── Mobile overlay ── */}
       <div className={cn('fixed inset-0 z-40 lg:hidden', open ? 'visible' : 'invisible')}>
         <div
-          className={cn('absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300', open ? 'opacity-100' : 'opacity-0')}
+          className={cn('absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300', open ? 'opacity-100' : 'opacity-0')}
           onClick={close}
           aria-hidden
         />
         <aside className={cn(
-          'absolute inset-y-0 left-0 w-[220px] bg-[#0E0E10] flex flex-col transition-transform duration-300 ease-out',
+          'absolute inset-y-0 left-0 w-[220px] bg-[#0C0C0E] flex flex-col transition-transform duration-300 ease-out',
           open ? 'translate-x-0' : '-translate-x-full'
         )}>
           <button
             type="button"
             onClick={close}
-            className="absolute top-4 right-3.5 p-1.5 rounded-lg text-gray-600 hover:text-gray-300 hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-3.5 p-1.5 rounded-lg text-[#52525B] hover:text-[#D4D4D8] hover:bg-white/10 transition-colors"
             aria-label="Close menu"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -195,7 +195,7 @@ export function Sidebar({ profile, unreadMessages }: { profile: Profile; unreadM
       </div>
 
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden lg:flex lg:flex-col w-[220px] shrink-0 bg-[#0E0E10]">
+      <aside className="hidden lg:flex lg:flex-col w-[220px] shrink-0 bg-[#0C0C0E]">
         <SidebarContent profile={profile} unreadMessages={unreadMessages} onClose={() => {}} />
       </aside>
     </>

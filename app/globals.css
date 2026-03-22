@@ -2,33 +2,35 @@
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg-base:    #F4F2EF;   /* warm off-white canvas */
+  /* Backgrounds — Warm calm neutrals */
+  --bg-base:    #F5F4F0;   /* warm off-white canvas — calm, not clinical */
   --bg-surface: #FFFFFF;   /* card / panel surface  */
+  --bg-subtle:  #EDEBE6;   /* hover fills, divider backgrounds */
+  --bg-input:   #FAFAF9;   /* input/select backgrounds */
 
-  /* Primary — violet */
-  --primary-50:  #f5f3ff;
-  --primary-100: #ede9fe;
-  --primary-200: #ddd6fe;
-  --primary-400: #a78bfa;
-  --primary-500: #8b5cf6;
-  --primary-600: #7c3aed;
-  --primary-700: #6d28d9;
+  /* Primary — Deep calm navy-blue */
+  --primary-50:  #EEF2FF;
+  --primary-100: #E0E7FF;
+  --primary-200: #C7D2FE;
+  --primary-400: #4F6DC8;
+  --primary-500: #1C3FAA;
+  --primary-600: #162F82;
+  --primary-700: #10215E;
 
   /* Text */
-  --text-strong:   #111111;
+  --text-strong:   #111018;
   --text-default:  #374151;
-  --text-muted:    #6b7280;
-  --text-faint:    #9ca3af;
+  --text-muted:    #6B7280;
+  --text-faint:    #9CA3AF;
 
   /* Border */
-  --border:       rgba(0, 0, 0, 0.07);
-  --border-light: rgba(0, 0, 0, 0.04);
+  --border:       #E3E1DC;
+  --border-faint: rgba(0, 0, 0, 0.05);
 
-  /* Shadows */
-  --shadow-xs:  0 1px 2px rgba(0,0,0,0.05);
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  /* Shadows — Refined and very subtle */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
 
   --background: var(--bg-base);
   --foreground: var(--text-strong);
@@ -57,19 +59,19 @@ body {
 
 /* ── Selection ─────────────────────────────────────────────────── */
 ::selection {
-  background: rgb(124 58 237 / 0.12);
+  background: rgb(28 63 170 / 0.10);
   color: inherit;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.12) transparent;
+  scrollbar-color: rgba(0,0,0,0.10) transparent;
 }
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.18); }
 
 /* ── Scrollbar hide utility ────────────────────────────────────── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }

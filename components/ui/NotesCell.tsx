@@ -23,7 +23,7 @@ function linkify(text: string): React.ReactNode[] {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 underline hover:text-blue-800 break-all"
+        className="text-[#1C3FAA] underline hover:text-[#162F82] break-all"
         onClick={(e) => e.stopPropagation()}
       >
         {url}
@@ -56,7 +56,7 @@ export function NotesCell({ notes }: NotesCellProps) {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="ml-1 text-blue-500 hover:text-blue-700 text-xs font-medium whitespace-nowrap"
+          className="ml-1 text-[#1C3FAA] hover:text-[#162F82] text-xs font-medium whitespace-nowrap"
         >
           {expanded ? 'less' : 'more'}
         </button>

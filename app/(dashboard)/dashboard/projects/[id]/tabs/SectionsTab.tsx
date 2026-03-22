@@ -136,8 +136,8 @@ export function SectionsTab({
       {/* Empty state — no sections at all */}
       {sections.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl py-20 text-center shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-[#6B7280]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
             </svg>
           </div>
@@ -163,7 +163,7 @@ export function SectionsTab({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items..."
-              className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+              className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-black/[0.08] rounded-xl text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1C3FAA]/20 focus:border-[#1C3FAA] transition-all"
             />
             {query && (
               <button
@@ -192,7 +192,7 @@ export function SectionsTab({
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                className="mt-4 text-xs text-violet-600 hover:text-violet-800 font-semibold transition-colors"
+                className="mt-4 text-xs text-[#1C3FAA] hover:text-[#162F82] font-semibold transition-colors"
               >
                 Clear search
               </button>
